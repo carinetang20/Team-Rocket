@@ -1,0 +1,33 @@
+{
+  "name": "teamrocket-engine",
+  "version": "0.1.0",
+  "description": "Person A game logic engine — Mars outpost survival simulation",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "demo": "vite",
+    "demo:build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "balance": "tsx scripts/balance-sim.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "vitest": "^2.1.8"
+  }
+}
