@@ -1,13 +1,8 @@
 node_modules/
 dist/
-<<<<<<< HEAD
 demo-dist/
 coverage/
 .env
 *.log
 .DS_Store
-=======
-*.log
-.DS_Store
 .vite/
->>>>>>> c3dbce401f7b6aec58411fb6f497715633b34a78

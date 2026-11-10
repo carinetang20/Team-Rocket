@@ -1,36 +1,4 @@
 {
-<<<<<<< HEAD
-  "name": "teamrocket-engine",
-  "version": "0.1.0",
-  "description": "Person A game logic engine — Mars outpost survival simulation",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "demo": "vite",
-    "demo:build": "vite build",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "balance": "tsx scripts/balance-sim.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.0",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
-    "vite": "^6.0.3",
-    "vitest": "^2.1.8"
-=======
   "name": "mars-outpost-survival",
   "private": true,
   "version": "0.1.0",
@@ -39,11 +7,15 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "balance": "tsx tools/simulator/balance.ts"
   },
   "devDependencies": {
+    "tsx": "^4.19.2",
     "typescript": "~5.6.3",
-    "vite": "~5.4.10"
->>>>>>> c3dbce401f7b6aec58411fb6f497715633b34a78
+    "vite": "~5.4.10",
+    "vitest": "^2.1.8"
   }
 }

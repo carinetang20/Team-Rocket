@@ -21,17 +21,18 @@ How to run the game: [README.md](README.md).
 
 ## Project status
 
-- **Phase:** Clickable grey-box prototype (Person B) running on a **fake engine**. Contract is a draft awaiting team review.
-- **Next step:** Team kickoff → agree the contract → Person A builds the real engine in `src/engine/` and swaps it in at `src/main.ts`.
+- **Phase:** Clickable grey-box prototype (Person B) + **real engine** (Person A) in `src/engine/`, driven by `src/config/`.
+- **Person A done:** config, engine (AP/tasks/sleep/power/health/events/hazards/boss/save), tests, balance simulator; design issues O1–O5 resolved (see `docs/decisions.md`).
+- **Next step:** Person B/C polish + art. Fake engine kept in `src/fake-engine/` for reference only.
 
 ## Repo layout
 
 ```
 src/
   contract/     SHARED (A + B): types.ts + engine.ts — the engine ↔ UI contract
-  engine/       A: real rules engine (not created yet)
-  config/       A: all balance numbers (not created yet)
-  fake-engine/  B: TEMPORARY stand-in engine — delete when src/engine/ is ready
+  engine/       A: real rules engine
+  config/       A: all balance numbers
+  fake-engine/  B: TEMPORARY stand-in engine — reference only; real engine is wired in
   flow/         B: screen order/state machine, saving, debug tools
   screens/      B: one function per screen (grey-box placeholders for now)
   content/      B: all player-facing text + asset manifest

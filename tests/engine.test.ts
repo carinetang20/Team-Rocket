@@ -1,175 +1,255 @@
-import { describe, expect, it } from "vitest";
-import { GameEngine } from "../src/engine/engine.js";
-import { CONFIG, createStartingStats } from "../src/engine/config.js";
-import { resolveBoss } from "../src/engine/boss.js";
-import { deserializeState, serializeState } from "../src/engine/save.js";
-import { getCuratedSpaceWeather } from "../src/data/nasa/curated.js";
+import { describe, expect, it } from 'vitest';
+import { CONFIG } from '../src/config/gameConfig';
+import { createEngine } from '../src/engine';
+import type { GameState, Strategy } from '../src/contract/types';
 
-describe("GameEngine", () => {
-  it("starts on sol 1 with 3 AP and base stats", async () => {
-    const engine = new GameEngine({ seed: 42, useCuratedWeather: true });
-    const result = await engine.startGame();
-    expect(result.ok).toBe(true);
-    const view = engine.getView();
-    expect(view.day).toBe(1);
-    expect(view.ap).toBe(CONFIG.dailyApGrant);
-    expect(view.stats.hunger.current).toBe(CONFIG.startingStat);
-    expect(view.phase).toBe("acting");
-    expect(view.availableTasks.length).toBeGreaterThan(0);
+/** Keep life support high enough to survive nights while testing other systems. */
+function stabilize(state: GameState): GameState {
+  state.resources.food.current = Math.max(state.resources.food.current, 20);
+  state.resources.water.current = Math.max(state.resources.water.current, 20);
+  state.resources.oxygen.current = Math.max(state.resources.oxygen.current, 20);
+  state.resources.health.current = Math.max(state.resources.health.current, 20);
+  state.facilities.oxygenGenerator.status = 'operational';
+  state.facilities.waterRecycler.status = 'operational';
+  return state;
+}
+
+function advanceToDay(engine: ReturnType<typeof createEngine>, state: GameState, day: number): GameState {
+  let s = state;
+  while (s.day < day && s.phase === 'playing') {
+    stabilize(s);
+    ({ state: s } = engine.sleep(s));
+    if (s.phase !== 'playing') break;
+    ({ state: s } = engine.startDay(s));
+  }
+  return s;
+}
+
+describe('config & newGame', () => {
+  it('starts on day 1 with AP and damaged life-support (O3)', () => {
+    const engine = createEngine();
+    const { state, events } = engine.newGame({ seed: 42 });
+    expect(state.day).toBe(1);
+    expect(state.ap).toBe(CONFIG.apPerDay);
+    expect(state.apCap).toBe(CONFIG.apCap);
+    expect(state.facilities.oxygenGenerator.status).toBe('damaged');
+    expect(state.facilities.waterRecycler.status).toBe('damaged');
+    expect(state.facilities.shieldGenerator.producesPerDay.shield).toBeGreaterThan(0);
+    expect(events[0]?.type).toBe('dayStarted');
   });
 
-  it("rejects tasks that cost more AP than available", async () => {
-    const engine = new GameEngine({ seed: 7, useCuratedWeather: true });
-    await engine.startGame();
-    await engine.doTask("plant_crops");
-    await engine.doTask("emergency_ration_run");
-    const result = await engine.doTask("repair_oxygen");
-    expect(result.ok).toBe(false);
+  it('exposes rules from config (no hard-coded UI numbers)', () => {
+    const engine = createEngine();
+    expect(engine.rules.finalDay).toBe(CONFIG.finalDay);
+    expect(engine.rules.endingRequired).toBe(CONFIG.endingRequired);
+    expect(engine.rules.lifeSupportThreshold).toBe(CONFIG.lifeSupportThreshold);
+  });
+});
+
+describe('AP & tasks', () => {
+  it('rejects tasks that cost more AP than available', () => {
+    const engine = createEngine();
+    let { state } = engine.newGame({ seed: 7 });
+    state = { ...state, ap: 1 };
+    const result = engine.doTask(state, 'repairOxygenGenerator');
+    expect(result.events[0]?.type).toBe('taskRejected');
+    expect(result.state.ap).toBe(1);
   });
 
-  it("applies trade-offs when planting crops", async () => {
-    const engine = new GameEngine({ seed: 9, useCuratedWeather: true });
-    await engine.startGame();
-    const before = engine.getView().stats;
-    const result = await engine.doTask("plant_crops");
-    expect(result.ok).toBe(true);
-    const after = engine.getView().stats;
-    expect(after.hunger.current).toBeGreaterThan(before.hunger.current);
-    expect(after.power.current).toBeLessThan(before.power.current);
+  it('repairs oxygen generator immediately', () => {
+    const engine = createEngine();
+    const { state } = engine.newGame({ seed: 9 });
+    const result = engine.doTask(state, 'repairOxygenGenerator');
+    expect(result.events[0]?.type).toBe('taskCompleted');
+    expect(result.state.facilities.oxygenGenerator.status).toBe('operational');
+    expect(result.state.ap).toBe(CONFIG.apPerDay - 2);
   });
 
-  it("carries leftover AP up to the save cap", async () => {
-    const engine = new GameEngine({ seed: 11, useCuratedWeather: true });
-    await engine.startGame();
-    await engine.sleep();
-    const view = engine.getView();
-    if (view.phase === "hazard") engine.acknowledgeHazard();
-    expect(engine.getView().ap).toBe(CONFIG.maxSavedAp);
+  it('enforces maxLevel (O5)', () => {
+    const engine = createEngine();
+    let { state } = engine.newGame({ seed: 8 });
+    state = { ...state, ap: 10 };
+    ({ state } = engine.doTask(state, 'repairOxygenGenerator'));
+    state = { ...state, ap: 10 };
+    const second = engine.doTask(state, 'repairOxygenGenerator');
+    expect(second.events[0]?.type).toBe('taskRejected');
   });
 
-  it("save and load restores day and stats", async () => {
-    const engine = new GameEngine({ seed: 99, useCuratedWeather: true });
-    await engine.startGame();
-    await engine.doTask("plant_crops");
-    const raw = engine.save();
-    const loaded = deserializeState(raw);
-    expect(loaded.day).toBe(1);
-    expect(loaded.completedTasks).toContain("plant_crops");
+  it('chargeShield raises shield (O1)', () => {
+    const engine = createEngine();
+    const { state } = engine.newGame({ seed: 11 });
+    const before = state.resources.shield.current;
+    const result = engine.doTask(state, 'chargeShield');
+    expect(result.state.resources.shield.current).toBeGreaterThan(before);
+    expect(result.state.resources.power.current).toBeLessThan(state.resources.power.current);
+  });
 
-    const engine2 = new GameEngine({ seed: 1, useCuratedWeather: true });
-    const result = engine2.load(serializeState(loaded));
-    expect(result.ok).toBe(true);
-    expect(engine2.getView().day).toBe(1);
-    expect(engine2.getView().stats.hunger.current).toBe(
-      loaded.stats.hunger.current,
+  it('visitMedBay raises health (O2)', () => {
+    const engine = createEngine();
+    const { state } = engine.newGame({ seed: 13 });
+    const before = state.resources.health.current;
+    const result = engine.doTask(state, 'visitMedBay');
+    expect(result.state.resources.health.current).toBeGreaterThan(before);
+  });
+
+  it('plantCrops schedules a harvest batch', () => {
+    const engine = createEngine();
+    const { state } = engine.newGame({ seed: 15 });
+    const result = engine.doTask(state, 'plantCrops');
+    expect(result.state.crops.length).toBe(1);
+    expect(result.state.crops[0]?.readyOnDay).toBe(state.day + CONFIG.tasks.plantCrops.cropReadyInDays);
+    expect(result.state.facilities.greenhouse.status).toBe('growing');
+  });
+});
+
+describe('sleep: hazards, power, health', () => {
+  it('warns on day 2 and strikes hazard on day 3 sleep (D2)', () => {
+    const engine = createEngine();
+    let { state } = engine.newGame({ seed: 55 });
+    ({ state } = engine.sleep(state));
+    ({ state } = engine.startDay(state));
+    expect(state.day).toBe(2);
+    expect(state.upcoming?.kind).toBe('hazard');
+    expect(state.upcoming?.day).toBe(3);
+
+    ({ state } = engine.sleep(state));
+    ({ state } = engine.startDay(state));
+    expect(state.day).toBe(3);
+
+    const night = engine.sleep(state);
+    expect(night.events.some((e) => e.type === 'hazardStruck')).toBe(true);
+  });
+
+  it('reinforceHabitat blocks shield hazard damage (D2)', () => {
+    const engine = createEngine();
+    let { state } = engine.newGame({ seed: 21 });
+    state = { ...state, ap: 10 };
+    ({ state } = engine.doTask(state, 'reinforceHabitat'));
+    state.upcoming = {
+      day: state.day,
+      kind: 'hazard',
+      hazardId: 'dustStorm',
+      hazardName: 'Dust Storm',
+    };
+    const before = state.resources.shield.current;
+    const night = engine.sleep(state);
+    const struck = night.events.find((e) => e.type === 'hazardStruck');
+    expect(struck?.type).toBe('hazardStruck');
+    if (struck?.type === 'hazardStruck') {
+      const shieldHit = struck.damage.find((d) => d.resource === 'shield');
+      expect(shieldHit?.blockedBy.some((b) => b.taskId === 'reinforceHabitat')).toBe(true);
+      expect(shieldHit!.final).toBeLessThan(shieldHit!.base);
+    }
+    expect(night.state.resources.shield.current).toBeGreaterThan(
+      before - 7, // full dust storm without block
     );
   });
 
-  it("triggers hazard phase on day 3", async () => {
-    const engine = new GameEngine({ seed: 55, useCuratedWeather: true });
-    await engine.startGame();
+  it('shuts shield off before oxygen when power is short (O4)', () => {
+    const engine = createEngine();
+    let { state } = engine.newGame({ seed: 33 });
+    state.facilities.oxygenGenerator.status = 'operational';
+    state.facilities.waterRecycler.status = 'operational';
+    state.facilities.greenhouse.status = 'operational';
+    state.facilities.shieldGenerator.status = 'operational';
+    state.facilities.powerStation.producesPerDay.power = 0;
+    state.resources.power.current = 1; // only enough for oxygen (1)
+    const night = engine.sleep(state);
+    expect(night.state.facilities.oxygenGenerator.status).not.toBe('unpowered');
+    expect(night.state.facilities.shieldGenerator.status).toBe('unpowered');
+    expect(night.events.some((e) => e.type === 'powerShortage')).toBe(true);
+  });
 
-    await engine.sleep();
-    let view = engine.getView();
-    if (view.phase === "hazard") engine.acknowledgeHazard();
-    await engine.sleep();
-    view = engine.getView();
-    expect(view.day).toBe(3);
-    expect(view.phase).toBe("hazard");
-    expect(view.activeHazard).not.toBeNull();
+  it('records death cause when health hits 0 (D3)', () => {
+    const engine = createEngine();
+    let { state } = engine.newGame({ seed: 44 });
+    state.resources.health.current = 1;
+    state.resources.food.current = 0;
+    state.resources.water.current = 0;
+    state.resources.oxygen.current = 0;
+    state.lowStreaks = { food: 2, water: 2, oxygen: 2 };
+    const night = engine.sleep(state);
+    expect(night.state.phase).toBe('dead');
+    expect(night.state.deathCause).not.toBeNull();
+    expect(night.events.some((e) => e.type === 'gameOver')).toBe(true);
+  });
+
+  it('emits lowResourceWarning after 2+ nights below threshold', () => {
+    const engine = createEngine();
+    let { state } = engine.newGame({ seed: 66 });
+    state.lowStreaks.oxygen = 2;
+    state.resources.oxygen.current = 2;
+    stabilize(state);
+    state.resources.oxygen.current = 2;
+    ({ state } = engine.sleep(state));
+    if (state.phase !== 'playing') return;
+    const morning = engine.startDay(state);
+    expect(morning.events.some((e) => e.type === 'lowResourceWarning' && e.resource === 'oxygen')).toBe(
+      true,
+    );
   });
 });
 
-describe("Boss endings", () => {
-  it("picks the strongest qualifying stat", () => {
-    const stats = createStartingStats();
-    stats.shield.current = 52;
-    stats.hunger.current = 60;
-    expect(resolveBoss(stats).ending).toBe("food");
+describe('boss day & endings', () => {
+  it('emits bossArrived on day 15 with no AP grant (D1)', () => {
+    const engine = createEngine();
+    let { state } = engine.newGame({ seed: 99 });
+    state = advanceToDay(engine, state, 14);
+    expect(state.day).toBe(14);
+    stabilize(state);
+    ({ state } = engine.sleep(state));
+    const day15 = engine.startDay(state);
+    expect(day15.state.day).toBe(15);
+    expect(day15.events.some((e) => e.type === 'bossArrived')).toBe(true);
+    expect(day15.state.ap).toBe(state.ap);
   });
 
-  it("uses plan tie-break when values match", () => {
-    const stats = createStartingStats();
-    stats.shield.current = 50;
-    stats.hunger.current = 50;
-    expect(resolveBoss(stats).ending).toBe("shield");
+  it.each([
+    ['shield', 'shield'],
+    ['food', 'food'],
+    ['power', 'power'],
+    ['evacuate', 'health'],
+  ] as const)('wins %s strategy when required stat is met', (strategy, resource) => {
+    const engine = createEngine();
+    let { state } = engine.newGame({ seed: 1 });
+    state = {
+      ...state,
+      day: 15,
+      resources: {
+        ...state.resources,
+        [resource]: { current: CONFIG.endingRequired, max: 60 },
+      },
+    };
+    const result = engine.chooseStrategy(state, strategy as Strategy);
+    expect(result.state.phase).toBe('won');
+    expect(result.state.outcome?.result).toBe('win');
+    expect(result.events[0]).toMatchObject({ type: 'bossResolved', success: true, strategy });
   });
 
-  it("picks food ending when only hunger qualifies", () => {
-    const stats = createStartingStats();
-    stats.hunger.current = 50;
-    expect(resolveBoss(stats).ending).toBe("food");
-  });
-
-  it("picks power ending when only power qualifies", () => {
-    const stats = createStartingStats();
-    stats.power.current = 50;
-    expect(resolveBoss(stats).ending).toBe("power");
-  });
-
-  it("picks health ending when only health qualifies", () => {
-    const stats = createStartingStats();
-    stats.health.current = 50;
-    expect(resolveBoss(stats).ending).toBe("health");
-  });
-
-  it("picks bad ending when nothing reaches threshold", () => {
-    const stats = createStartingStats();
-    expect(resolveBoss(stats).ending).toBe("bad");
-  });
-});
-
-describe("NASA curated data", () => {
-  it("returns attributed curated weather with severity", () => {
-    const snap = getCuratedSpaceWeather(0);
-    expect(snap.source).toBe("curated");
-    expect(snap.attribution).toMatch(/DONKI/);
-    expect(snap.severityMultiplier).toBeGreaterThanOrEqual(1);
-    expect(snap.events.length).toBeGreaterThan(0);
+  it('loses when chosen strategy stat is below threshold', () => {
+    const engine = createEngine();
+    let { state } = engine.newGame({ seed: 2 });
+    state = { ...state, day: 15 };
+    const result = engine.chooseStrategy(state, 'shield');
+    expect(result.state.phase).toBe('lost');
+    expect(result.state.outcome?.result).toBe('bad');
   });
 });
 
-describe("full playthrough", () => {
-  it("balanced build can reach a non-game-over ending", async () => {
-    const engine = new GameEngine({ seed: 2026, useCuratedWeather: true });
-    await engine.startGame();
-    const order = [
-      "plant_crops",
-      "install_solar",
-      "reinforce_habitat",
-      "repair_oxygen",
-      "expand_greenhouse",
-      "upgrade_batteries",
-      "build_radiation_shelter",
-      "repair_water",
-      "medic_room",
-      "patch_shield",
-    ];
+describe('save / load', () => {
+  it('round-trips serialize / deserialize', () => {
+    const engine = createEngine();
+    const { state } = engine.newGame({ seed: 123 });
+    const mid = engine.doTask(state, 'plantCrops').state;
+    const raw = engine.serialize(mid);
+    const loaded = engine.deserialize(raw);
+    expect(loaded.seed).toBe(123);
+    expect(loaded.crops.length).toBe(1);
+    expect(loaded.upgrades.plantCrops).toBe(1);
+  });
 
-    for (let i = 0; i < 250; i += 1) {
-      const view = engine.getView();
-      if (view.ending) break;
-      if (view.phase === "hazard") {
-        engine.acknowledgeHazard();
-        continue;
-      }
-      if (view.phase === "acting") {
-        let acted = false;
-        for (const id of order) {
-          const latest = engine.getView();
-          const task = latest.availableTasks.find((t) => t.id === id);
-          if (task && latest.ap >= task.apCost) {
-            await engine.doTask(id);
-            acted = true;
-            break;
-          }
-        }
-        if (!acted) await engine.sleep();
-      }
-    }
-
-    const ending = engine.getView().ending;
-    expect(ending).not.toBeNull();
-    expect(ending).not.toBe("game_over");
+  it('rejects incompatible save versions', () => {
+    const engine = createEngine();
+    expect(() => engine.deserialize(JSON.stringify({ version: 999 }))).toThrow(/version/i);
   });
 });

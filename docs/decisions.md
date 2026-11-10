@@ -42,15 +42,19 @@ Guiding principle: the game should be **educationally challenging, not needlessl
 
 ---
 
-## Open design issues (for Person A + design doc owner)
+## Design issues — resolved by Person A *(2026-11-09)*
 
-Found when checking the design doc's numbers. Must be resolved before balancing.
+Implemented in `src/config/gameConfig.ts` + `src/engine/`. Re-check with `npm run balance`.
 
-| # | Issue | Why it matters | Suggested direction |
-|---|---|---|---|
-| O1 | **Shield ending is unreachable.** Shield starts at 10, has no passive recovery, and no task raises it (Reinforce Habitat only reduces damage). | One of four endings can never be won. | Add a task like "Charge Shield (+X)" or a Shield Generator upgrade that produces Shield daily. |
-| O2 | **Health ending is unreachable.** Health only regenerates overnight: best case 10 + 2 × 14 nights = 38, before any hazard damage. | One of four endings can never be won. | Add Health sources (med bay, rest task, food/cat bonuses) or adjust the threshold. |
-| O3 | **Facility starting condition undefined.** Tasks like "Repair Oxygen Generator" imply some start broken. | Determines early-game difficulty. | Define which facilities start damaged and what "damaged" means (0% or 50% output). |
-| O4 | **Power shortage order undefined.** | Without a rule, shortages become an unpredictable death spiral. | Fixed shutdown priority, e.g. keep Oxygen → Water → Greenhouse → Shield (Shield shuts off first). |
-| O5 | **Upgrade limits undefined.** | Players could stack one upgrade forever. | Max level per task. |
-| O6 | **Food/Power endings are tight.** | May be reachable only with near-perfect play. | Verify with the balance simulator. |
+| # | Issue | Resolution |
+|---|---|---|
+| O1 | **Shield ending unreachable** | Shield Generator starts with `+1 shield/night`. Tasks: `chargeShield` (+5 now, costs power) and `upgradeShieldGenerator` (more daily shield + max). |
+| O2 | **Health ending unreachable** | Task: `visitMedBay` (+4 Health, costs 1 Food / 1 AP), repeatable. |
+| O3 | **Facility starting condition** | Oxygen Generator + Water Recycler start **damaged** (0% output until repaired). Others operational. Damaged = no production. |
+| O4 | **Power shortage order** | Fixed keep-order: Oxygen → Water → Greenhouse → Shield (Shield shuts off first). See `CONFIG.powerPriority`. |
+| O5 | **Upgrade limits** | Every task has `maxLevel` in config (`null` = repeatable, e.g. Plant Crops / Charge Shield / Med Bay). |
+| O6 | **Food/Power endings tight** | Verified reachable via `npm run balance` scripted strategies. Tune numbers in config only if playtests feel harsh. |
+
+## Open design issues
+
+None blocking Person A. Further balance tweaks = edit `src/config/` only.
