@@ -1,5 +1,5 @@
 // Game text — owned by Person B. All wording the player reads lives here so it can be
-// edited without touching game logic. Keep sentences short and friendly (ages 7–12).
+// edited without touching game logic. Keep sentences short and friendly (ages 7–11).
 
 import type {
   DeathCause,
@@ -21,7 +21,7 @@ export interface Line {
 export const SPEAKER_NAMES: Record<Speaker, string> = {
   jasslyn: 'Commander Jasslyn',
   jamie: 'Jamie',
-  cat: 'Cat (name TBD)',
+  cat: 'Cat',
   player: 'You',
 };
 
@@ -30,104 +30,97 @@ export const RESOURCE_LABELS: Record<ResourceId, string> = {
   power: 'Power',
   shield: 'Shield',
   health: 'Health',
-  oxygen: 'Oxygen',
-  water: 'Water',
+  oxygen: 'O2',
+  water: 'H2O',
 };
 
 export const FACILITY_NAMES: Record<FacilityId, string> = {
   mainBase: 'Main Base',
-  shieldGenerator: 'Shield Generator',
-  powerStation: 'Power Station',
+  shieldGenerator: 'Shield',
+  powerStation: 'Power',
   greenhouse: 'Greenhouse',
-  oxygenGenerator: 'Oxygen Generator',
-  waterRecycler: 'Water Recycler',
+  oxygenGenerator: 'Oxygen',
+  waterRecycler: 'Water',
 };
 
 export const STATUS_LABELS: Record<FacilityStatus, string> = {
   operational: 'Working',
   damaged: 'Broken',
   unpowered: 'No power',
-  growing: 'Growing crops',
+  growing: 'Growing',
 };
 
 // ---------- Story ----------
 
 export const OPENING_SLIDES: { asset: string; text: string }[] = [
-  { asset: 'cut_opening_1', text: 'On Mars, a small team of astronauts worked hard to build their outpost.' },
-  { asset: 'cut_opening_2', text: 'Then one night, a giant alien attacked and smashed most of the buildings!' },
-  { asset: 'cut_opening_3', text: 'The team sent an emergency signal to Earth. Help is on the way... and that help is YOU!' },
+  { asset: 'cut_opening_1', text: 'Astronauts built a home on Mars.' },
+  { asset: 'cut_opening_2', text: 'Then a giant alien smashed it!' },
+  { asset: 'cut_opening_3', text: 'They need YOU to help rebuild.' },
 ];
 
 export const TUTORIAL: Line[] = [
-  { speaker: 'jasslyn', text: "Welcome to Mars, recruit! I'm Commander Jasslyn. A giant alien wrecked our outpost, and we need your help to rebuild it." },
-  { speaker: 'jasslyn', text: 'Your mission: keep the crew alive until Day 15. The alien will come back the moment Day 15 begins, so we must be ready!' },
-  { speaker: 'jamie', text: "Hi, I'm Jamie! The bars at the top show our Food, Power, Shield and Health, plus Oxygen and Water. If they get too low, we get sick." },
-  { speaker: 'jamie', text: 'Every day you get Action Points (AP). Click a building to spend AP on tasks like repairs and upgrades.' },
-  { speaker: 'jamie', text: 'Some of our machines are broken. Open the Base panel to see which ones need fixing!' },
-  { speaker: 'jasslyn', text: 'When you run out of AP, or want to rest, press Sleep. Overnight we use up supplies, and our machines make new ones.' },
-  { speaker: 'jamie', text: "Any AP you don't use is saved for tomorrow — but there's a limit. Good luck, astronaut!" },
+  { speaker: 'jasslyn', text: "Hi! I'm Jasslyn. Help us fix the outpost." },
+  { speaker: 'jasslyn', text: 'Stay alive until Day 15. Then the alien comes back!' },
+  { speaker: 'jamie', text: "I'm Jamie. The bars up top are our supplies. Don't let them get too low!" },
+  { speaker: 'jamie', text: 'AP = Action Points. Click a building to use them.' },
+  { speaker: 'jasslyn', text: 'When AP is gone, press Sleep. Night uses supplies — and makes new ones.' },
 ];
 
-export const BOSS_TEXT = 'The ground shakes... The alien is back! How will the team face it?';
+export const BOSS_TEXT = 'The alien is back! Pick a plan.';
 
 // ---------- Characters you can click ----------
 
 export const NPC_LINES: Record<'jasslyn' | 'jamie' | 'cat', string[]> = {
   jasslyn: [
-    'Remember: the alien returns at the start of Day 15 — there is no time to prepare that day. Decide early which plan you will use to stop it!',
-    'Each final plan needs one stat to be really high. Shield, Food, Power, or Health for evacuating.',
-    'Check the warnings each morning. A hazard is coming every few days.',
+    'The alien comes on Day 15. Be ready!',
+    'Pick one plan: Shield, Food, Power, or Health.',
+    'Watch for warnings. Bad things come every few days.',
   ],
   jamie: [
-    "Fun fact: a day on Mars is called a 'sol'. It lasts about 24 hours and 40 minutes!",
-    "Fun fact: Mars looks red because its dust contains iron oxide — that's rust!",
-    'Fun fact: Olympus Mons on Mars is the tallest volcano we know of in the whole solar system!',
-    'Fun fact: gravity on Mars is only about 38% of Earth’s. You could jump about two and a half times higher here!',
-    'Fun fact: Mars has two small moons, called Phobos and Deimos.',
-    "Fun fact: the air on Mars is very thin and mostly carbon dioxide. We can't breathe it — that's why the Oxygen Generator matters!",
-    'Fun fact: Mars is freezing! The average temperature is about −60 °C.',
+    'A day on Mars is called a sol!',
+    'Mars is red because of rusty dust.',
+    "Mars air isn't safe to breathe — we need the Oxygen machine!",
+    'Mars is really cold — about −60 °C.',
   ],
   cat: [
-    'Mrrp? (The cat rubs against your space boots.)',
-    'Purrrr... (The cat seems happy you are here.)',
-    '(The cat stares at the food storage. Then at you. Then back at the food.)',
+    'Mrrp?',
+    'Purrrr...',
+    '(The cat looks at the food. Then at you.)',
   ],
 };
 
 // ---------- Hazards ----------
 
 export const HAZARD_HINTS: Record<string, string> = {
-  oxygenLeak: 'Repair the Oxygen Generator and save up extra oxygen.',
-  waterContamination: 'Repair the Water Recycler and save up extra water.',
-  solarFlare: 'A Radiation Shelter and extra stored power will help.',
-  generatorMalfunction: 'Save up extra power before tonight.',
-  dustStorm: 'Reinforcing the habitat will protect the shield.',
-  meteorShower: 'Reinforce the habitat and save up extra power.',
-  alienInvasion: 'Have extra food ready — the alien is hungry!',
-  cropInfestation: 'Save extra food in case the crops get damaged.',
+  oxygenLeak: 'Fix Oxygen. Save extra Oxygen.',
+  waterContamination: 'Fix Water. Save extra Water.',
+  solarFlare: 'Build a Radiation Shelter. Save Power.',
+  generatorMalfunction: 'Save extra Power.',
+  dustStorm: 'Reinforce the base to protect Shield.',
+  meteorShower: 'Reinforce the base. Save Power.',
+  alienInvasion: 'Save extra Food!',
+  cropInfestation: 'Save extra Food.',
 };
 
-export const GENERIC_HAZARD_HINT = 'Use your AP today to get ready!';
-export const BOSS_WARNING_TEXT =
-  'The alien returns tomorrow morning! Today is your LAST day to prepare. Which plan will you choose: Shield, Food, Power, or Evacuate?';
+export const GENERIC_HAZARD_HINT = 'Use your AP to get ready!';
+export const BOSS_WARNING_TEXT = 'Alien tomorrow! Last day to prepare. Pick a plan: Shield, Food, Power, or Evacuate.';
 
 const PROTECTION_TIPS: Partial<Record<ResourceId, string>> = {
-  shield: 'Reinforcing the habitat would have protected us!',
-  power: 'Keeping extra power stored helps us survive hits like this.',
-  oxygen: 'Extra stored oxygen helps us survive leaks.',
-  water: 'Extra stored water helps when the recycler has problems.',
-  food: 'Extra stored food keeps us safe when crops are lost.',
+  shield: 'Stronger walls would help next time.',
+  power: 'Extra Power helps next time.',
+  oxygen: 'Extra Oxygen helps next time.',
+  water: 'Extra Water helps next time.',
+  food: 'Extra Food helps next time.',
 };
 
 export function explainHazard(ev: EventOf<'hazardStruck'>): string[] {
   return ev.damage.map((d) => {
     const label = RESOURCE_LABELS[d.resource];
     if (d.blockedBy.length > 0) {
-      const names = d.blockedBy.map((b) => b.name).join(' and ');
-      return `Great planning! Our ${names} blocked ${d.base - d.final} ${label} damage. Without it, we would have lost ${d.base}.`;
+      return `Nice! We blocked ${d.base - d.final} ${label}.`;
     }
     const tip = PROTECTION_TIPS[d.resource];
-    return `Ouch! We lost ${d.final} ${label}.${tip ? ' ' + tip : ''}`;
+    return `Lost ${d.final} ${label}.${tip ? ` ${tip}` : ''}`;
   });
 }
 
@@ -141,68 +134,68 @@ function listNames(resources: ResourceId[]): string {
 export function healthReasonText(ev: EventOf<'healthChanged'>): string {
   switch (ev.reason) {
     case 'allHealthy':
-      return 'Everyone had enough food, water and oxygen, so health went up!';
+      return ev.delta > 0 ? 'Supplies were OK — Health up!' : 'Health is full.';
     case 'oneLow':
-      return `${listNames(ev.lowResources)} was too low, so health went down.`;
+      return `${listNames(ev.lowResources)} was low — Health down.`;
     case 'manyLow':
-      return `${listNames(ev.lowResources)} were too low, so health went down a lot.`;
+      return `${listNames(ev.lowResources)} were low — Health down a lot.`;
     case 'hazard':
       return 'The hazard hurt the crew.';
   }
 }
 
 const FIX_TIPS: Record<LifeSupportId, string> = {
-  oxygen: 'Repair the Oxygen Generator early — it makes new oxygen every night!',
-  water: 'Repair the Water Recycler — it is one of the cheapest tasks!',
-  food: 'Plant crops early. They take a couple of days to grow, so plan ahead!',
+  oxygen: 'Fix the Oxygen machine early!',
+  water: 'Fix the Water machine — it is cheap!',
+  food: 'Plant crops early. They take 2 days.',
 };
 
 export function lowWarningText(ev: EventOf<'lowResourceWarning'>): string {
-  return `${RESOURCE_LABELS[ev.resource]} has been low for ${ev.nightsBelow} nights! Our health will keep dropping until we fix it. ${FIX_TIPS[ev.resource]}`;
+  return `${RESOURCE_LABELS[ev.resource]} low for ${ev.nightsBelow} nights! ${FIX_TIPS[ev.resource]}`;
 }
 
 // ---------- Game over (decision D3) ----------
 
 export function deathExplanation(cause: DeathCause): { why: string[]; tips: string[] } {
   const why = cause.lowResources.map(
-    (l) => `${RESOURCE_LABELS[l.resource]} was too low for ${l.nightsBelow} night${l.nightsBelow === 1 ? '' : 's'} in a row.`,
+    (l) => `${RESOURCE_LABELS[l.resource]} was low for ${l.nightsBelow} night${l.nightsBelow === 1 ? '' : 's'}.`,
   );
-  if (cause.finalBlow === 'hazard') why.push(`The ${cause.hazardName ?? 'hazard'} hit when the crew's health was already low.`);
-  if (why.length === 0) why.push("The crew's health ran out.");
+  if (cause.finalBlow === 'hazard') why.push(`A ${cause.hazardName ?? 'hazard'} hit when Health was low.`);
+  if (why.length === 0) why.push('Health ran out.');
 
   const tips = cause.lowResources.map((l) => FIX_TIPS[l.resource]);
-  tips.push('Open the Base panel every morning to spot broken machines early.');
+  tips.push('Check Base each morning for broken machines.');
   return { why, tips: [...new Set(tips)].slice(0, 2) };
 }
 
 // ---------- Final boss & endings ----------
 
 export const STRATEGY_INFO: Record<Strategy, { title: string; description: string }> = {
-  shield: { title: 'Activate the Barrier Shield', description: 'Power the shield up to full so the alien cannot break in.' },
-  food: { title: 'Offer Food to the Alien', description: 'Give the alien a giant feast so it leaves happy.' },
-  power: { title: 'Overload the Power Station', description: 'Zap the alien with a huge burst of electricity.' },
-  evacuate: { title: 'Evacuate the Outpost', description: 'Fly everyone safely back to Earth. The crew must be healthy for the trip.' },
+  shield: { title: 'Use the Shield', description: 'Block the alien with a strong shield.' },
+  food: { title: 'Give Food', description: 'Feed the alien so it leaves happy.' },
+  power: { title: 'Zap with Power', description: 'Shock the alien with lots of power.' },
+  evacuate: { title: 'Fly Home', description: 'Escape to Earth. Needs high Health.' },
 };
 
 export const ENDING_TEXT: Record<Strategy | 'bad', { title: string; text: string }> = {
   shield: {
-    title: 'The Shield Holds!',
-    text: 'The alien pounds on the glowing barrier, but it cannot break through. Eventually it gives up and stomps away.',
+    title: 'Shield Wins!',
+    text: 'The alien cannot break the shield. It stomps away.',
   },
   food: {
-    title: 'A Happy Alien',
-    text: 'The alien gobbles up the giant feast. Full and satisfied, it wanders off without attacking.',
+    title: 'Happy Alien',
+    text: 'The alien eats the feast and leaves.',
   },
   power: {
     title: 'Zap!',
-    text: 'The alien smashes the Power Station — and gets a huge electric shock! It runs away and never comes back.',
+    text: 'A big shock scares the alien away!',
   },
   evacuate: {
-    title: 'Safe Journey Home',
-    text: 'The healthy crew boards the rocket and blasts off. Everyone returns to Earth safe and sound.',
+    title: 'Home Safe',
+    text: 'The crew flies home to Earth.',
   },
   bad: {
-    title: 'The Outpost Falls',
-    text: 'The plan did not work. The alien destroys the outpost again... but every astronaut learns from their mistakes. Try again!',
+    title: 'Oh No...',
+    text: 'The plan failed. Try a different plan next time!',
   },
 };

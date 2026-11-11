@@ -224,6 +224,7 @@ function toView(s: GameState, t: FakeTask): TaskView {
     maxLevel: t.maxLevel,
     available: lockedReason === undefined,
     lockedReason,
+    effects: [],
   };
 }
 

@@ -1,9 +1,9 @@
 // Outpost View — the main screen. HUD, facilities, crew, and the pop-ups opened from here
 // (task menu, Base Management panel, dialogue, tutorial).
 
-import type { FacilityId, GameState, ResourceId, TaskView } from '../contract/types';
+import type { FacilityId, GameState, ResourceId, TaskEffectPreview, TaskView } from '../contract/types';
 import { CORE_STAT_IDS, FACILITY_IDS } from '../contract/types';
-import { facilityAssetId } from '../content/assetManifest';
+import { facilityAssetId, taskAssetId } from '../content/assetManifest';
 import {
   FACILITY_NAMES,
   NPC_LINES,
@@ -16,7 +16,7 @@ import {
 import { filterEvents } from '../flow/events';
 import type { FlowContext } from '../flow/flow';
 import { assetBackground, assetBox } from './assets';
-import { dialogueBox, modal, screen, toast } from './common';
+import { dialogueBox, modal, resourceChip, screen } from './common';
 import { button, clickable, h } from './dom';
 
 const CREW = ['jasslyn', 'jamie', 'cat'] as const;
@@ -48,11 +48,9 @@ export function outpostScreen(ctx: FlowContext): HTMLElement {
     { class: 'outpost-footer' },
     h('p', {
       class: 'muted',
-      text: lastDay
-        ? `🚨 Last day to prepare! The alien arrives when Day ${ctx.rules.finalDay} begins. You have ${s.ap} AP left.`
-        : `You have ${s.ap} AP left. Unused AP is saved for tomorrow (up to ${s.apCap}).`,
+      text: lastDay ? `Last day · AP ${s.ap}` : `AP ${s.ap}`,
     }),
-    button(lastDay ? '🌙 Sleep (the alien comes next!)' : '🌙 Sleep (end day)', ctx.actions.sleep),
+    button(lastDay ? 'End the Day?' : 'End the Day?', ctx.actions.sleep),
   );
 
   return screen(
@@ -67,7 +65,6 @@ export function outpostScreen(ctx: FlowContext): HTMLElement {
       ),
     h('div', { class: 'outpost-main' }, scene, crew),
     footer,
-    toast(ctx.toast),
     modalFor(ctx, s),
     tutorialOverlay(ctx),
   );
@@ -77,25 +74,42 @@ export function outpostScreen(ctx: FlowContext): HTMLElement {
 
 function hud(ctx: FlowContext, s: GameState): HTMLElement {
   const pips = Array.from({ length: s.apCap }, (_, i) => h('span', { class: `ap-pip ${i < s.ap ? 'full' : ''}` }));
+  const daysToHazard =
+    s.upcoming?.kind === 'hazard' ? Math.max(0, s.upcoming.day - s.day) : s.upcoming?.kind === 'boss' ? Math.max(0, ctx.rules.finalDay - s.day) : null;
+  const hazardLabel =
+    daysToHazard === null
+      ? null
+      : daysToHazard === 0
+        ? s.upcoming?.kind === 'boss'
+          ? 'Alien next!'
+          : 'Hazard tonight!'
+        : s.upcoming?.kind === 'boss'
+          ? `Alien in ${daysToHazard} day${daysToHazard === 1 ? '' : 's'}`
+          : `Hazard in ${daysToHazard} day${daysToHazard === 1 ? '' : 's'}`;
+
   return h(
     'header',
     { class: 'hud' },
     h(
       'div',
-      { class: 'hud-group' },
-      assetBox('icon_day', { compact: true, class: 'icon' }),
-      h('strong', { text: `Day ${s.day} / ${ctx.rules.finalDay}` }),
+      { class: 'hud-panel' },
+      h('div', { class: 'hud-day', text: `DAY ${s.day}` }),
+      hazardLabel &&
+        h('div', { class: 'hud-hazard' }, h('span', { class: 'hud-hazard-mark', text: '!' }), h('span', { text: hazardLabel })),
+      h(
+        'div',
+        { class: 'hud-group', title: 'Action Points' },
+        h('span', { text: `AP ${s.ap}` }),
+        h('span', { class: 'ap-pips' }, ...pips),
+      ),
+      h('div', { class: 'hud-stats' }, ...CORE_STAT_IDS.map((r) => statBar(ctx, s, r))),
     ),
     h(
       'div',
-      { class: 'hud-group', title: 'Action Points: your energy for tasks today' },
-      assetBox('icon_ap', { compact: true, class: 'icon' }),
-      h('span', { text: `AP ${s.ap}` }),
-      h('span', { class: 'ap-pips' }, ...pips),
+      { class: 'hud-panel' },
+      h('div', { class: 'hud-stats hud-life' }, statBar(ctx, s, 'oxygen'), statBar(ctx, s, 'water')),
     ),
-    h('div', { class: 'hud-stats' }, ...CORE_STAT_IDS.map((r) => statBar(ctx, s, r))),
-    h('div', { class: 'hud-stats hud-life' }, statBar(ctx, s, 'oxygen'), statBar(ctx, s, 'water')),
-    button('📋 Base', () => ctx.actions.openModal({ kind: 'baseManagement' }), { variant: 'secondary' }),
+    button('Report', () => ctx.actions.openModal({ kind: 'baseManagement' }), { variant: 'secondary' }),
   );
 }
 
@@ -111,7 +125,6 @@ function statBar(ctx: FlowContext, s: GameState, r: ResourceId): HTMLElement {
     h(
       'div',
       { class: 'stat-body' },
-      h('span', { class: 'stat-label', text: `${RESOURCE_LABELS[r]} ${low ? '⚠' : ''}` }),
       h('div', { class: 'bar' }, h('div', { class: `bar-fill bar-${r}`, style: `width:${pct}%` })),
       h('span', { class: 'stat-value', text: `${v.current} / ${v.max}` }),
     ),
@@ -150,30 +163,64 @@ function modalFor(ctx: FlowContext, s: GameState): HTMLElement | null {
   }
 }
 
-function tasksModal(ctx: FlowContext, s: GameState, facility: FacilityId): HTMLElement {
+function tasksModal(ctx: FlowContext, _s: GameState, facility: FacilityId): HTMLElement {
   const tasks = ctx.tasks.filter((t) => t.facility === facility);
-  const f = s.facilities[facility];
   return modal(
     FACILITY_NAMES[facility],
     [
-      h('p', { class: 'muted', text: `Status: ${STATUS_LABELS[f.status]} · You have ${s.ap} AP` }),
+      h('p', { class: 'task-modal-prompt', text: 'Choose your upgrades:' }),
       tasks.length
         ? h('div', { class: 'task-list' }, ...tasks.map((t) => taskCard(ctx, t)))
         : h('p', { text: 'No tasks here yet.' }),
+      // Shared bottom placeholder for the Do it action (per-card button sits in each card slot too).
+      h('div', { class: 'task-modal-footer-slot', attrs: { 'data-placeholder': 'do-it-area' } }),
     ],
     ctx.actions.closeModal,
+    { class: 'modal-upgrades' },
+  );
+}
+
+function effectTone(e: TaskEffectPreview): 'up' | 'down' | 'info' {
+  if (e.kind === 'info') return 'info';
+  return e.delta >= 0 ? 'up' : 'down';
+}
+
+function effectChip(e: TaskEffectPreview): HTMLElement {
+  if (e.kind === 'info' || !e.resource) {
+    return h('li', { class: 'task-effect task-effect-info', text: e.note ?? '' });
+  }
+  const tone = effectTone(e);
+  const signed = `${e.delta > 0 ? '+' : ''}${e.delta}`;
+  const suffix =
+    e.kind === 'max' ? 'max' : e.kind === 'perDay' ? '/night' : e.kind === 'delayed' ? `in ${e.readyInDays ?? '?'}d` : undefined;
+  return h(
+    'li',
+    { class: `task-effect task-effect-${tone}` },
+    resourceChip(e.resource, signed, { tone: tone === 'info' ? 'neutral' : tone, suffix }),
   );
 }
 
 function taskCard(ctx: FlowContext, t: TaskView): HTMLElement {
   return h(
     'div',
-    { class: `task-card ${t.available ? '' : 'locked'}` },
-    h('div', { class: 'task-head' }, h('strong', { text: t.name }), h('span', { class: 'ap-cost', text: `${t.apCost} AP` })),
-    h('p', { text: t.description }),
-    t.maxLevel !== null && h('p', { class: 'muted small', text: `Level ${t.level} / ${t.maxLevel}` }),
-    !t.available && t.lockedReason && h('p', { class: 'locked-reason', text: `🔒 ${t.lockedReason}` }),
-    button('Do it', () => ctx.actions.doTask(t.id), { disabled: !t.available }),
+    { class: `task-card ${t.available ? 'available' : 'locked'}` },
+    h(
+      'span',
+      { class: 'ap-cost', title: 'Action Points' },
+      h('span', { text: `${t.apCost} AP` }),
+    ),
+    h('div', { class: 'task-card-art' }, assetBox(taskAssetId(t.id), { class: 'task-art' })),
+    h('p', { class: 'task-card-name', text: t.name }),
+    h('p', { class: 'task-card-desc', text: t.description }),
+    t.effects.length > 0 &&
+      h('ul', { class: 'task-effects', attrs: { 'aria-label': 'What this changes' } }, ...t.effects.map(effectChip)),
+    t.maxLevel !== null && h('p', { class: 'muted small', text: `Lv ${t.level}/${t.maxLevel}` }),
+    !t.available && t.lockedReason && h('p', { class: 'locked-reason', text: t.lockedReason }),
+    h(
+      'div',
+      { class: 'task-card-action-slot', attrs: { 'data-placeholder': 'do-it-button' } },
+      button('Upgrade', () => ctx.actions.doTask(t.id), { disabled: !t.available }),
+    ),
   );
 }
 
@@ -182,20 +229,19 @@ function baseManagementModal(ctx: FlowContext, s: GameState): HTMLElement {
     const f = s.facilities[id];
     const makes = Object.entries(f.producesPerDay)
       .filter(([, n]) => (n ?? 0) > 0)
-      .map(([r, n]) => `+${n} ${RESOURCE_LABELS[r as ResourceId]}`)
-      .join(', ');
+      .map(([r, n]) => resourceChip(r as ResourceId, `+${n}`, { tone: 'up', suffix: '/night' }));
     return h(
       'tr',
       {},
       h('td', {}, assetBox(facilityAssetId(id, f.status), { compact: true, class: 'icon' })),
       h('td', { text: FACILITY_NAMES[id] }),
       h('td', {}, h('span', { class: `status-chip chip-${f.status}`, text: STATUS_LABELS[f.status] })),
-      h('td', { text: makes ? `${makes} / night` : '—' }),
-      h('td', { text: f.powerUse ? `${f.powerUse} Power` : '—' }),
+      h('td', {}, makes.length ? h('div', { class: 'chip-row' }, ...makes) : h('span', { text: '—' })),
+      h('td', {}, f.powerUse ? resourceChip('power', `−${f.powerUse}`, { tone: 'down' }) : h('span', { text: '—' })),
     );
   });
   const crops = s.crops.length
-    ? h('p', { text: `🌱 ${s.crops.length} batch(es) of crops growing. Next harvest on Day ${Math.min(...s.crops.map((c) => c.readyOnDay))}.` })
+    ? h('p', { text: `Crops growing. Ready Day ${Math.min(...s.crops.map((c) => c.readyOnDay))}.` })
     : null;
   return modal(
     'Base Management',
@@ -207,7 +253,7 @@ function baseManagementModal(ctx: FlowContext, s: GameState): HTMLElement {
         h('tbody', {}, ...rows),
       ),
       crops,
-      h('p', { class: 'muted small', text: 'Machines only make things when they are working and have power.' }),
+      h('p', { class: 'muted small', text: 'Broken or unpowered machines make nothing.' }),
     ],
     ctx.actions.closeModal,
   );
@@ -225,7 +271,7 @@ function dialogueModal(ctx: FlowContext, speaker: (typeof CREW)[number]): HTMLEl
             i += 1;
             draw();
           }, { variant: 'secondary' }),
-        speaker === 'cat' && button('🐟 Feed (coming later)', () => undefined, { disabled: true }),
+        speaker === 'cat' && button('Feed (coming later)', () => undefined, { disabled: true }),
       ]),
     );
   };
@@ -243,8 +289,8 @@ function tutorialOverlay(ctx: FlowContext): HTMLElement | null {
     { class: 'tutorial-overlay' },
     dialogueBox(line.speaker, line.text, [
       h('span', { class: 'muted small', text: `${ctx.tutorialStep + 1} / ${TUTORIAL.length}` }),
-      !last && button('Skip tutorial', ctx.actions.tutorialSkip, { variant: 'secondary' }),
-      button(last ? "Let's go!" : 'Next', ctx.actions.tutorialNext),
+      !last && button('Skip', ctx.actions.tutorialSkip, { variant: 'secondary' }),
+      button(last ? 'Go!' : 'Next', ctx.actions.tutorialNext),
     ]),
   );
 }

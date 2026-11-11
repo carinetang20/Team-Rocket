@@ -76,9 +76,10 @@ The engine also exposes `rules: { finalDay, endingRequired, lifeSupportThreshold
 | `chooseStrategy(state, strategy)` | `playing`, Day 15 only (after `bossArrived`) | Resolves the boss. Sets `phase` to `won` or `lost`. |
 | `serialize(state)` / `deserialize(text)` | Always | Save/load. The flow layer handles storage. |
 
-`TaskView`: `{ id, name, description, category, facility, apCost, level, maxLevel, available, lockedReason? }`
+`TaskView`: `{ id, name, description, category, facility, apCost, level, maxLevel, available, lockedReason?, effects[] }`
 - `maxLevel`: `null` means no limit (e.g. Plant Crops can be repeated).
 - `lockedReason`: kid-friendly reason the task can't be done (not enough AP, max level, missing prerequisite).
+- `effects`: preview of resource costs/gains (`now` / `max` / `perDay` / `delayed` / `info`) so the UI can show +/− before spending AP.
 ### Night resolution order (`sleep`) — proposal for Person A to confirm
 1. Hazard, if today is a hazard day (D2) → `hazardStruck`.
 2. Consumption (Food, Water, Oxygen) → `consumption`.

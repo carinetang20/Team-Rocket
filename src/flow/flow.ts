@@ -3,11 +3,27 @@
 // The order of screens follows docs/screen-flow.md.
 
 import type { EngineRules, GameEngine } from '../contract/engine';
-import type { EngineEvent, EventOf, FacilityId, GameState, Strategy, TaskId, TaskView } from '../contract/types';
+import type {
+  EngineEvent,
+  EventOf,
+  FacilityId,
+  GameState,
+  ResourceChange,
+  Strategy,
+  TaskId,
+  TaskView,
+} from '../contract/types';
 import type { Speaker } from '../content/dialogue';
 import { TUTORIAL } from '../content/dialogue';
 import { findEvent } from './events';
 import { clearSave, loadGame, loadProfile, saveGame, saveProfile, type Profile } from './save';
+
+/** Brief feedback after an action (shown once, then cleared). */
+export type ToastData = {
+  text?: string;
+  apSpent?: number;
+  changes?: ResourceChange[];
+} | null;
 
 export type ScreenId =
   | 'title'
@@ -57,7 +73,7 @@ export interface FlowContext {
   readonly tasks: TaskView[];
   readonly modal: Modal;
   readonly tutorialStep: number | null;
-  readonly toast: string | null;
+  readonly toast: ToastData;
   readonly profile: Profile;
   readonly hasSave: boolean;
   readonly actions: FlowActions;
@@ -73,7 +89,7 @@ export class Flow implements FlowContext {
   bossEvent: EventOf<'bossResolved'> | null = null;
   modal: Modal = null;
   tutorialStep: number | null = null;
-  toast: string | null = null;
+  toast: ToastData = null;
   profile: Profile = loadProfile();
   screen: ScreenId = 'title';
   readonly actions: FlowActions;
@@ -171,7 +187,7 @@ export class Flow implements FlowContext {
       this.state = this.engine.deserialize(text);
     } catch {
       clearSave();
-      this.toast = 'That save could not be loaded, sorry! Please start a new game.';
+      this.toast = { text: 'Save broken. Please start a new game.' };
       this.show('title');
       return;
     }
@@ -190,8 +206,15 @@ export class Flow implements FlowContext {
     this.state = r.state;
     const done = findEvent(r.events, 'taskCompleted');
     const rejected = findEvent(r.events, 'taskRejected');
-    if (done) this.toast = `✓ ${done.name} done!`;
-    else if (rejected) this.toast = rejected.reason;
+    if (done) {
+      this.toast = {
+        text: done.name,
+        apSpent: done.apSpent,
+        changes: done.changes.filter((c) => c.delta !== 0),
+      };
+    } else if (rejected) {
+      this.toast = { text: rejected.reason };
+    }
 
     // Out of AP before the final day → the day ends automatically.
     if (done && this.state.ap === 0 && this.state.day < this.rules.finalDay) {

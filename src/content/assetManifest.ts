@@ -74,6 +74,35 @@ for (const name of ICONS) {
   ASSETS[`icon_${name}`] = { file: `icons/${name}.svg`, width: 128, height: 128, label: name.replace('_', ' ').toUpperCase() };
 }
 
+// ---------- Task card art (placeholders until art arrives) ----------
+
+const TASK_ART: Record<string, { file: string; label: string }> = {
+  repairOxygenGenerator: { file: 'fix_oxygen', label: 'Fix Oxygen' },
+  repairWaterRecycler: { file: 'fix_water', label: 'Fix Water' },
+  installSolarPanels: { file: 'solar_panels', label: 'Solar Panels' },
+  upgradeBatteries: { file: 'batteries', label: 'Batteries' },
+  reinforceHabitat: { file: 'stronger_walls', label: 'Stronger Walls' },
+  buildRadiationShelter: { file: 'safe_room', label: 'Safe Room' },
+  chargeShield: { file: 'charge_shield', label: 'Charge Shield' },
+  upgradeShieldGenerator: { file: 'upgrade_shield', label: 'Upgrade Shield' },
+  plantCrops: { file: 'plant_crops', label: 'Plant Crops' },
+  expandGreenhouse: { file: 'expand_greenhouse', label: 'Bigger Greenhouse' },
+  visitMedBay: { file: 'med_bay', label: 'Med Bay' },
+};
+
+export function taskAssetId(taskId: string): string {
+  return `task_${taskId}`;
+}
+
+for (const [id, art] of Object.entries(TASK_ART)) {
+  ASSETS[taskAssetId(id)] = {
+    file: `tasks/${art.file}.svg`,
+    width: 256,
+    height: 256,
+    label: art.label,
+  };
+}
+
 // ---------- Hazards ----------
 
 const HAZARD_ART: Record<string, string> = {

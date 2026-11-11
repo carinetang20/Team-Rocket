@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <radialGradient id="bat-glow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#ffe566" stop-opacity=".35"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bat-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6ee7a0"/>
+      <stop offset="45%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="bat-shell" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#e8eaed"/>
+      <stop offset="50%" stop-color="#c5c9ce"/>
+      <stop offset="100%" stop-color="#8b9198"/>
+    </linearGradient>
+    <linearGradient id="bat-bolt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fffbe6"/>
+      <stop offset="50%" stop-color="#ffe033"/>
+      <stop offset="100%" stop-color="#f0a000"/>
+    </linearGradient>
+    <filter id="bat-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="112" fill="url(#bat-glow)"/>
+  <!-- back battery (smaller) -->
+  <g transform="translate(36 72) scale(0.78)" opacity=".7">
+    <rect x="88" y="28" width="40" height="16" rx="4" fill="#9ca3af"/>
+    <rect x="56" y="40" width="104" height="148" rx="18" fill="url(#bat-shell)" stroke="#555" stroke-width="3"/>
+  </g>
+  <!-- main battery -->
+  <rect x="108" y="48" width="40" height="18" rx="5" fill="#9ca3af" stroke="#555" stroke-width="2"/>
+  <rect x="72" y="62" width="112" height="152" rx="20" fill="url(#bat-shell)" stroke="#4b5563" stroke-width="3"/>
+  <!-- charge fill -->
+  <rect x="82" y="90" width="92" height="112" rx="12" fill="url(#bat-body)"/>
+  <rect x="90" y="100" width="20" height="90" rx="8" fill="#fff" opacity=".25"/>
+  <!-- bolt -->
+  <g filter="url(#bat-soft)">
+    <path d="M140 108L112 148h18l-12 40 36-52h-18l16-28z"
+          fill="url(#bat-bolt)" stroke="#c98400" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+  <!-- plus badge -->
+  <g filter="url(#bat-soft)" transform="translate(176 176)">
+    <circle cx="24" cy="24" r="26" fill="#1a3a20" stroke="#39ff14" stroke-width="3"/>
+    <path d="M12 24h24M24 12v24" stroke="#39ff14" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>

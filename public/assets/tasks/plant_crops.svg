@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <radialGradient id="pc-glow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#86efac" stop-opacity=".4"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pc-soil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a16207"/>
+      <stop offset="100%" stop-color="#713f12"/>
+    </linearGradient>
+    <linearGradient id="pc-leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#bbf7d0"/>
+      <stop offset="45%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+    <linearGradient id="pc-pot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fda4af"/>
+      <stop offset="50%" stop-color="#e11d48"/>
+      <stop offset="100%" stop-color="#9f1239"/>
+    </linearGradient>
+    <filter id="pc-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="112" fill="url(#pc-glow)"/>
+  <!-- pot -->
+  <path d="M72 148h112l-12 72H84z" fill="url(#pc-pot)" stroke="#7f1d1d" stroke-width="3"/>
+  <rect x="64" y="136" width="128" height="18" rx="6" fill="#fb7185" stroke="#9f1239" stroke-width="2"/>
+  <ellipse cx="128" cy="148" rx="56" ry="10" fill="url(#pc-soil)"/>
+  <!-- sprout left -->
+  <g filter="url(#pc-soft)">
+    <path d="M100 148c0-28-18-48-18-48s22 8 28 36" fill="url(#pc-leaf)" stroke="#166534" stroke-width="2"/>
+    <path d="M100 148c0-36 22-56 22-56s-8 28-10 56" fill="#4ade80" opacity=".85"/>
+    <!-- sprout center -->
+    <path d="M128 148c-4-40 0-72 0-72s24 28 20 72" fill="url(#pc-leaf)" stroke="#166534" stroke-width="2"/>
+    <path d="M128 148c4-40 0-72 0-72s-24 28-20 72" fill="#86efac" opacity=".7"/>
+    <!-- sprout right -->
+    <path d="M156 148c0-28 18-48 18-48s-22 8-28 36" fill="url(#pc-leaf)" stroke="#166534" stroke-width="2"/>
+    <path d="M156 148c0-36-22-56-22-56s8 28 10 56" fill="#4ade80" opacity=".85"/>
+  </g>
+  <!-- stems -->
+  <g stroke="#166534" stroke-width="4" stroke-linecap="round">
+    <line x1="100" y1="148" x2="100" y2="118"/>
+    <line x1="128" y1="148" x2="128" y2="96"/>
+    <line x1="156" y1="148" x2="156" y2="118"/>
+  </g>
+  <!-- water drop -->
+  <g filter="url(#pc-soft)" opacity=".9">
+    <path d="M196 72c0 0-16 22-16 32a16 16 0 0032 0c0-10-16-32-16-32z" fill="#38bdf8" stroke="#0369a1" stroke-width="2"/>
+  </g>
+</svg>

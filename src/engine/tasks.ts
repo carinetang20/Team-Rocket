@@ -1,5 +1,5 @@
 import { CONFIG } from '../config/gameConfig';
-import type { GameState, ResourceChange, TaskId, TaskView } from '../contract/types';
+import type { GameState, ResourceChange, TaskEffectPreview, TaskId, TaskView } from '../contract/types';
 import { changeResource, raiseMax } from './resources';
 
 type TaskDef = (typeof CONFIG.tasks)[keyof typeof CONFIG.tasks];
@@ -10,40 +10,90 @@ export function getTask(taskId: TaskId): TaskDef | undefined {
   return TASK_LIST.find((t) => t.id === taskId);
 }
 
+/** Preview what the task will change so the UI can show +/− before spending AP. */
+export function previewEffects(task: TaskDef): TaskEffectPreview[] {
+  const t = CONFIG.tasks;
+  switch (task.id) {
+    case t.repairOxygenGenerator.id:
+      return [{ delta: 0, kind: 'info', note: 'Oxygen works again' }];
+    case t.repairWaterRecycler.id:
+      return [{ delta: 0, kind: 'info', note: 'Water works again' }];
+    case t.installSolarPanels.id:
+      return [{ resource: 'power', delta: t.installSolarPanels.powerProductionBonus, kind: 'perDay' }];
+    case t.upgradeBatteries.id:
+      return [{ resource: 'power', delta: t.upgradeBatteries.powerMaxBonus, kind: 'max' }];
+    case t.reinforceHabitat.id:
+      return [{ delta: 0, kind: 'info', note: `−${t.reinforceHabitat.shieldBlockAmount} Shield damage` }];
+    case t.buildRadiationShelter.id:
+      return [{ delta: 0, kind: 'info', note: `−${t.buildRadiationShelter.radiationBlockAmount} flare damage` }];
+    case t.chargeShield.id:
+      return [
+        { resource: 'power', delta: -t.chargeShield.powerCost, kind: 'now' },
+        { resource: 'shield', delta: t.chargeShield.shieldGain, kind: 'now' },
+      ];
+    case t.upgradeShieldGenerator.id:
+      return [
+        { resource: 'shield', delta: t.upgradeShieldGenerator.shieldProductionBonus, kind: 'perDay' },
+        { resource: 'shield', delta: t.upgradeShieldGenerator.shieldMaxBonus, kind: 'max' },
+      ];
+    case t.plantCrops.id:
+      return [
+        {
+          resource: 'food',
+          delta: t.plantCrops.cropAmount,
+          kind: 'delayed',
+          readyInDays: t.plantCrops.cropReadyInDays,
+        },
+      ];
+    case t.expandGreenhouse.id:
+      return [
+        { resource: 'food', delta: t.expandGreenhouse.foodProductionBonus, kind: 'perDay' },
+        { resource: 'food', delta: t.expandGreenhouse.foodMaxBonus, kind: 'max' },
+      ];
+    case t.visitMedBay.id:
+      return [
+        { resource: 'food', delta: -t.visitMedBay.foodCost, kind: 'now' },
+        { resource: 'health', delta: t.visitMedBay.healthGain, kind: 'now' },
+      ];
+    default:
+      return [];
+  }
+}
+
 export function toTaskView(state: GameState, task: TaskDef): TaskView {
   const level = state.upgrades[task.id] ?? 0;
   let lockedReason: string | undefined;
 
   if (state.phase !== 'playing') {
-    lockedReason = 'The game is over.';
+    lockedReason = 'Game over.';
   } else if (state.day >= CONFIG.finalDay) {
-    lockedReason = 'The alien is here — no more tasks today.';
+    lockedReason = 'Alien is here — no tasks.';
   } else if (task.maxLevel !== null && level >= task.maxLevel) {
-    lockedReason = 'Already fully upgraded!';
+    lockedReason = 'Already maxed!';
   } else if (
     (task.id === 'plantCrops' || task.id === 'expandGreenhouse') &&
     state.facilities.greenhouse.status === 'damaged'
   ) {
-    lockedReason = 'The Greenhouse must be working first.';
+    lockedReason = 'Fix Greenhouse first.';
   } else if (
     (task.id === 'chargeShield' || task.id === 'upgradeShieldGenerator') &&
     state.facilities.shieldGenerator.status === 'damaged'
   ) {
-    lockedReason = 'The Shield Generator must be working first.';
+    lockedReason = 'Fix Shield first.';
   } else if (
     task.id === 'chargeShield' &&
     'powerCost' in task &&
     state.resources.power.current < task.powerCost
   ) {
-    lockedReason = `Need ${task.powerCost} Power to charge the shield.`;
+    lockedReason = `Need ${task.powerCost} Power.`;
   } else if (
     task.id === 'visitMedBay' &&
     'foodCost' in task &&
     state.resources.food.current < task.foodCost
   ) {
-    lockedReason = `Need ${task.foodCost} Food for med supplies.`;
+    lockedReason = `Need ${task.foodCost} Food.`;
   } else if (state.ap < task.apCost) {
-    lockedReason = `Not enough AP — you need ${task.apCost} but have ${state.ap}.`;
+    lockedReason = `Need ${task.apCost} AP (you have ${state.ap}).`;
   }
 
   return {
@@ -57,6 +107,7 @@ export function toTaskView(state: GameState, task: TaskDef): TaskView {
     maxLevel: task.maxLevel,
     available: lockedReason === undefined,
     lockedReason,
+    effects: previewEffects(task),
   };
 }
 

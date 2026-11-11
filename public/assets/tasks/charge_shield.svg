@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <radialGradient id="cs-glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#7ec8ff" stop-opacity=".55"/>
+      <stop offset="55%" stop-color="#2a6fd4" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cs-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e8ff"/>
+      <stop offset="28%" stop-color="#5aa4f0"/>
+      <stop offset="72%" stop-color="#2460c8"/>
+      <stop offset="100%" stop-color="#103a7a"/>
+    </linearGradient>
+    <linearGradient id="cs-rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eef8ff"/>
+      <stop offset="40%" stop-color="#8ec8ff"/>
+      <stop offset="100%" stop-color="#1a4a8c"/>
+    </linearGradient>
+    <linearGradient id="cs-bolt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fffbe6"/>
+      <stop offset="35%" stop-color="#ffe566"/>
+      <stop offset="100%" stop-color="#f5a800"/>
+    </linearGradient>
+    <filter id="cs-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- soft backdrop glow -->
+  <circle cx="128" cy="128" r="112" fill="url(#cs-glow)"/>
+
+  <!-- floating energy sparks -->
+  <g filter="url(#cs-soft)" opacity=".95">
+    <circle cx="48" cy="96" r="5" fill="#ffe566"/>
+    <circle cx="210" cy="88" r="4" fill="#fff4a3"/>
+    <circle cx="56" cy="176" r="3.5" fill="#7ec8ff"/>
+    <circle cx="204" cy="168" r="5" fill="#ffe566"/>
+    <circle cx="128" cy="28" r="3" fill="#fff"/>
+  </g>
+
+  <!-- shield drop shadow -->
+  <path d="M128 42L198 68v54c0 46-30 78-70 96-40-18-70-50-70-96V68L128 42z"
+        fill="#061428" opacity=".35" transform="translate(0 6)"/>
+
+  <!-- outer metallic rim -->
+  <path d="M128 38L200 66v56c0 48-32 82-72 100-40-18-72-52-72-100V66L128 38z"
+        fill="url(#cs-rim)" stroke="#0d2f66" stroke-width="3"/>
+
+  <!-- inner face -->
+  <path d="M128 52L184 74v44c0 38-24 66-56 82-32-16-56-44-56-82V74L128 52z"
+        fill="url(#cs-body)"/>
+
+  <!-- glass highlight -->
+  <path d="M128 60L164 76v28c0 8-2 16-6 22L118 88V72L128 60z"
+        fill="#ffffff" opacity=".28"/>
+
+  <!-- charged energy ring on face -->
+  <ellipse cx="128" cy="122" rx="34" ry="38" fill="none" stroke="#b8e4ff" stroke-width="4" opacity=".55"/>
+  <ellipse cx="128" cy="122" rx="34" ry="38" fill="none" stroke="#fff" stroke-width="1.5" opacity=".35" stroke-dasharray="6 8"/>
+
+  <!-- power bolt -->
+  <g filter="url(#cs-soft)">
+    <path d="M142 86L108 134h20l-12 48 44-62h-22l14-34z"
+          fill="url(#cs-bolt)" stroke="#c98400" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M136 96L116 128h12l-6 24 22-34h-12l8-22z"
+          fill="#fffbe6" opacity=".55"/>
+  </g>
+</svg>

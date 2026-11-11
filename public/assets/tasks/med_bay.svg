@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <radialGradient id="mb-glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#fda4af" stop-opacity=".4"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mb-kit" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#f1f5f9"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="mb-cross" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fb7185"/>
+      <stop offset="50%" stop-color="#e11d48"/>
+      <stop offset="100%" stop-color="#9f1239"/>
+    </linearGradient>
+    <linearGradient id="mb-heart" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fda4af"/>
+      <stop offset="50%" stop-color="#e11d48"/>
+      <stop offset="100%" stop-color="#9f1239"/>
+    </linearGradient>
+    <filter id="mb-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="112" fill="url(#mb-glow)"/>
+  <!-- kit shadow -->
+  <rect x="52" y="72" width="152" height="120" rx="20" fill="#061428" opacity=".3" transform="translate(4 6)"/>
+  <!-- med kit body -->
+  <rect x="48" y="68" width="160" height="128" rx="20" fill="url(#mb-kit)" stroke="#64748b" stroke-width="3"/>
+  <!-- handle -->
+  <path d="M96 68v-12c0-10 8-18 32-18s32 8 32 18v12" fill="none" stroke="#64748b" stroke-width="8" stroke-linecap="round"/>
+  <!-- latch -->
+  <rect x="112" y="60" width="32" height="14" rx="4" fill="#94a3b8" stroke="#475569" stroke-width="2"/>
+  <!-- red cross -->
+  <g filter="url(#mb-soft)">
+    <rect x="112" y="100" width="32" height="72" rx="8" fill="url(#mb-cross)"/>
+    <rect x="80" y="120" width="96" height="32" rx="8" fill="url(#mb-cross)"/>
+    <rect x="118" y="108" width="8" height="40" rx="3" fill="#fff" opacity=".3"/>
+  </g>
+  <!-- small heart accent -->
+  <g filter="url(#mb-soft)" transform="translate(176 168)">
+    <circle cx="24" cy="24" r="26" fill="#4c0519" stroke="#fb7185" stroke-width="3"/>
+    <path d="M24 38S8 28 8 18c0-5 4-8 8-8 3 0 5 1 6 3 1-2 3-3 6-3 4 0 8 3 8 8 0 10-16 20-16 20z"
+          fill="url(#mb-heart)"/>
+  </g>
+</svg>

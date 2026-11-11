@@ -166,6 +166,21 @@ export type EventOf<T extends EngineEventType> = Extract<EngineEvent, { type: T 
 
 // ---------- Views & results ----------
 
+/** What a task will change — shown on the task card before the player spends AP. */
+export interface TaskEffectPreview {
+  /** Resource touched, if any (omit for plain info like "starts working"). */
+  resource?: ResourceId;
+  /** Signed amount (+gain / −cost). 0 when `kind` is `info`. */
+  delta: number;
+  /**
+   * `now` = changes immediately; `max` = raises capacity; `perDay` = nightly production;
+   * `delayed` = arrives later (see `readyInDays`); `info` = short status text in `note`.
+   */
+  kind: 'now' | 'max' | 'perDay' | 'delayed' | 'info';
+  readyInDays?: number;
+  note?: string;
+}
+
 export interface TaskView {
   id: TaskId;
   name: string;
@@ -179,6 +194,8 @@ export interface TaskView {
   available: boolean;
   /** Kid-friendly reason the task can't be done right now. */
   lockedReason?: string;
+  /** Resource costs/gains (and similar) so the UI can show +/− before clicking. */
+  effects: TaskEffectPreview[];
 }
 
 export interface StepResult {

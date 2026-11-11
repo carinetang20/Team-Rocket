@@ -7,7 +7,6 @@ import {
   FACILITY_NAMES,
   GENERIC_HAZARD_HINT,
   HAZARD_HINTS,
-  RESOURCE_LABELS,
   STATUS_LABELS,
   explainHazard,
   healthReasonText,
@@ -15,7 +14,7 @@ import {
 import { filterEvents, findEvent } from '../flow/events';
 import type { FlowContext } from '../flow/flow';
 import { assetBox } from './assets';
-import { changeList, dialogueBox, panel, screen } from './common';
+import { changeList, dialogueBox, panel, resourceChip, screen } from './common';
 import { button, h } from './dom';
 
 export function dailyReportScreen(ctx: FlowContext): HTMLElement {
@@ -27,23 +26,23 @@ export function dailyReportScreen(ctx: FlowContext): HTMLElement {
   return screen(
     'report',
     panel(
-      `☀️ Daily Report — Day ${s?.day ?? '?'}`,
+      `Day ${s?.day ?? '?'} Report`,
       [
         started &&
           h('p', {
             text:
-              `You have ${started.apTotal} AP today (+${started.apGranted}).` +
-              (started.apLostToCap > 0 ? ` ${started.apLostToCap} AP was lost because you can only store ${s?.apCap}.` : ''),
+              `AP today: ${started.apTotal} (+${started.apGranted})` +
+              (started.apLostToCap > 0 ? `. Lost ${started.apLostToCap} (max ${s?.apCap}).` : '.'),
           }),
         random
           ? h(
               'div',
               { class: `report-event ${random.positive ? 'good' : 'bad'}` },
-              h('h3', { text: `${random.positive ? '🎉' : '⚠️'} ${random.name}` }),
+              h('h3', { text: random.name }),
               h('p', { text: random.message }),
               changeList(random.changes),
             )
-          : h('p', { class: 'muted', text: 'A quiet night. Nothing unusual happened.' }),
+          : h('p', { class: 'muted', text: 'Quiet night.' }),
         s &&
           h(
             'div',
@@ -52,7 +51,9 @@ export function dailyReportScreen(ctx: FlowContext): HTMLElement {
             h(
               'ul',
               { class: 'supply-list' },
-              ...RESOURCE_IDS.map((r) => h('li', { text: `${RESOURCE_LABELS[r]}: ${s.resources[r].current} / ${s.resources[r].max}` })),
+              ...RESOURCE_IDS.map((r) =>
+                h('li', {}, resourceChip(r, `${s.resources[r].current} / ${s.resources[r].max}`)),
+              ),
             ),
           ),
         problems.length > 0 &&
@@ -60,42 +61,43 @@ export function dailyReportScreen(ctx: FlowContext): HTMLElement {
           h(
             'div',
             {},
-            h('h3', { text: 'Needs attention' }),
+            h('h3', { text: 'Broken' }),
             h('ul', {}, ...problems.map((id) => h('li', { text: `${FACILITY_NAMES[id]}: ${STATUS_LABELS[s.facilities[id].status]}` }))),
           ),
       ],
-      [button('Continue', ctx.actions.next)],
+      [button('OK', ctx.actions.next)],
     ),
   );
 }
 
 export function warningScreen(ctx: FlowContext): HTMLElement {
   const w = findEvent(ctx.morningEvents, 'warning');
-  if (!w) return screen('warning', panel('Warning', [h('p', { text: 'No warning today.' })], [button('Continue', ctx.actions.next)]));
+  if (!w) return screen('warning', panel('Warning', [h('p', { text: 'No warning.' })], [button('OK', ctx.actions.next)]));
 
   if (w.kind === 'boss') {
     return screen(
       'warning',
       panel(
-        '🚨 The Alien Is Coming!',
+        'Alien Tomorrow!',
         [assetBox('char_alien_boss', { class: 'warning-image' }), h('p', { text: BOSS_WARNING_TEXT })],
-        [button('Get ready', ctx.actions.next)],
+        [button('Got it', ctx.actions.next)],
       ),
     );
   }
 
   const hint = w.hint ?? (w.hazardId ? HAZARD_HINTS[w.hazardId] : undefined) ?? GENERIC_HAZARD_HINT;
+  // Warning days are the day *before* the hazard night (e.g. Day 2 warns for Night 3).
+  const when = w.day === (ctx.state?.day ?? 0) ? 'tonight' : 'tomorrow night';
   return screen(
     'warning',
     panel(
-      `⚠️ Warning: ${w.hazardName ?? 'Hazard'} tonight!`,
+      `${w.hazardName ?? 'Hazard'} ${when}!`,
       [
         w.hazardId && assetBox(hazardAssetId(w.hazardId), { class: 'warning-image' }),
-        h('p', { text: `Our scanners say a ${w.hazardName ?? 'hazard'} will hit the outpost tonight, while we sleep.` }),
+        h('p', { text: `Coming ${when}. Get ready!` }),
         dialogueBox('jamie', hint, []),
-        h('p', { class: 'muted', text: 'Today is your chance to prepare!' }),
       ],
-      [button('Get ready', ctx.actions.next)],
+      [button('Got it', ctx.actions.next)],
     ),
   );
 }
@@ -110,7 +112,7 @@ export function hazardSceneScreen(ctx: FlowContext): HTMLElement {
       'div',
       { class: 'cutscene' },
       assetBox(hazardAssetId(hz.hazardId), { class: 'cutscene-image' }),
-      h('h2', { text: `💥 ${hz.name}!` }),
+      h('h2', { text: `${hz.name}!` }),
       h('p', { class: 'cutscene-text', text: hz.description }),
       dialogueBox('jamie', lines.join(' '), []),
       h('div', { class: 'panel-actions' }, button('Continue', ctx.actions.next)),
@@ -132,35 +134,49 @@ export function sleepSummaryScreen(ctx: FlowContext): HTMLElement {
   return screen(
     'summary',
     panel(
-      `🌙 Night ${ctx.state?.day ?? '?'} — What happened while you slept`,
+      `Night ${ctx.state?.day ?? '?'}`,
       [
         hz &&
           h(
             'div',
             { class: 'report-event bad' },
-            h('h3', { text: `💥 ${hz.name}` }),
-            h('ul', {}, ...hz.damage.map((d) => h('li', { text: `−${d.final} ${RESOURCE_LABELS[d.resource]}${d.base > d.final ? ` (blocked ${d.base - d.final}!)` : ''}` }))),
+            h('h3', { text: hz.name }),
+            h(
+              'ul',
+              { class: 'chip-row' },
+              ...hz.damage.map((d) =>
+                h(
+                  'li',
+                  {},
+                  resourceChip(d.resource, `−${d.final}`, {
+                    tone: 'down',
+                    suffix: d.base > d.final ? `saved ${d.base - d.final}` : undefined,
+                  }),
+                ),
+              ),
+            ),
           ),
-        consumption && h('div', {}, h('h3', { text: 'Used up' }), changeList(consumption.changes)),
-        production && h('div', {}, h('h3', { text: 'Made by machines' }), changeList(production.changes) ?? h('p', { class: 'muted', text: 'Nothing was made.' })),
-        crops && h('p', { class: 'change up', text: `🌾 Harvest! +${crops.amount} Food from your crops.` }),
+        consumption && h('div', {}, h('h3', { text: 'Used' }), changeList(consumption.changes)),
+        production && h('div', {}, h('h3', { text: 'Made' }), changeList(production.changes) ?? h('p', { class: 'muted', text: 'Nothing made.' })),
+        crops &&
+          h('p', { class: 'change up chip-row' }, h('span', { text: 'Harvest' }), resourceChip('food', `+${crops.amount}`, { tone: 'up' })),
         shortage &&
           h('p', {
             class: 'report-event bad',
-            text: `🔌 Not enough power! These machines switched off: ${shortage.facilitiesOff.map((f) => FACILITY_NAMES[f]).join(', ')}.`,
+            text: `Not enough Power. Off: ${shortage.facilitiesOff.map((f) => FACILITY_NAMES[f]).join(', ')}.`,
           }),
         statusChanges.length > 0 &&
-          h('ul', {}, ...statusChanges.map((c) => h('li', { text: `${FACILITY_NAMES[c.facility]}: ${STATUS_LABELS[c.from]} → ${STATUS_LABELS[c.to]} (${c.reason})` }))),
+          h('ul', {}, ...statusChanges.map((c) => h('li', { text: `${FACILITY_NAMES[c.facility]}: ${STATUS_LABELS[c.from]} → ${STATUS_LABELS[c.to]}` }))),
         health &&
           h(
             'div',
             { class: `report-event ${health.delta >= 0 ? 'good' : 'bad'}` },
-            h('h3', { text: `❤️ Health ${health.delta >= 0 ? '+' : ''}${health.delta}` }),
+            h('h3', { text: `Health ${health.delta >= 0 ? '+' : ''}${health.delta}` }),
             h('p', { text: healthReasonText(health) }),
           ),
-        dead && h('p', { class: 'report-event bad', text: "The crew's health has run out..." }),
+        dead && h('p', { class: 'report-event bad', text: 'Health ran out...' }),
       ],
-      [button(dead ? 'Continue' : 'Wake up ☀️', ctx.actions.afterNight)],
+      [button(dead ? 'Continue' : 'Wake up', ctx.actions.afterNight)],
     ),
   );
 }

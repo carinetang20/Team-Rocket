@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="tank" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6ad0f2"/>
+      <stop offset="45%" stop-color="#2aa6d8"/>
+      <stop offset="100%" stop-color="#1578a8"/>
+    </linearGradient>
+  </defs>
+  <!-- valve stem -->
+  <rect x="29" y="3" width="6" height="9" rx="1.5" fill="#4b5563"/>
+  <!-- valve handle -->
+  <rect x="35" y="5" width="11" height="4.5" rx="2" fill="#6b7280"/>
+  <circle cx="46.5" cy="7.2" r="3.2" fill="#9ca3af"/>
+  <!-- tank neck -->
+  <rect x="25" y="11" width="14" height="5" rx="2" fill="#374151"/>
+  <!-- tank body -->
+  <rect x="15" y="15" width="34" height="45" rx="15" fill="url(#tank)" stroke="#0f5f86" stroke-width="1.5"/>
+  <!-- bands -->
+  <rect x="16" y="26" width="32" height="2.2" fill="#0f5f86" opacity=".4"/>
+  <rect x="16" y="47" width="32" height="2.2" fill="#0f5f86" opacity=".4"/>
+  <!-- shine -->
+  <rect x="19" y="19" width="6" height="36" rx="3" fill="#e8f9ff" opacity=".32"/>
+  <!-- O2 label -->
+  <ellipse cx="30" cy="37" rx="9" ry="11" fill="none" stroke="#fff" stroke-width="3.5"/>
+  <text x="40" y="45" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="800" fill="#fff">2</text>
+</svg>

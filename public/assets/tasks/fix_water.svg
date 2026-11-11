@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <radialGradient id="fw-glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#4ab0ff" stop-opacity=".45"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="fw-drop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8ecff"/>
+      <stop offset="40%" stop-color="#3aa8ff"/>
+      <stop offset="100%" stop-color="#0d5aa8"/>
+    </linearGradient>
+    <linearGradient id="fw-wrench" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5f5f5"/>
+      <stop offset="50%" stop-color="#c0c4c8"/>
+      <stop offset="100%" stop-color="#7a8088"/>
+    </linearGradient>
+    <filter id="fw-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="112" fill="url(#fw-glow)"/>
+  <!-- drop shadow -->
+  <path d="M128 36C128 36 64 112 64 152a64 64 0 00128 0C192 112 128 36 128 36z"
+        fill="#061428" opacity=".3" transform="translate(4 6)"/>
+  <!-- main drop -->
+  <path d="M128 32C128 32 60 110 60 152a68 68 0 00136 0C196 110 128 32 128 32z"
+        fill="url(#fw-drop)" stroke="#0b4f96" stroke-width="3"/>
+  <ellipse cx="104" cy="128" rx="18" ry="28" fill="#d8f0ff" opacity=".5"/>
+  <!-- bubbles -->
+  <g fill="#fff" opacity=".7" filter="url(#fw-soft)">
+    <circle cx="148" cy="150" r="8"/>
+    <circle cx="132" cy="172" r="5"/>
+    <circle cx="160" cy="168" r="4"/>
+  </g>
+  <!-- wrench badge -->
+  <g filter="url(#fw-soft)" transform="translate(168 168)">
+    <circle cx="28" cy="28" r="30" fill="#0a2a50" stroke="#4ab0ff" stroke-width="3"/>
+    <path d="M18 22c0-8 6-14 14-14 4 0 7 1 9 3l-8 8 6 6 8-8c2 2 3 5 3 9 0 8-6 14-14 14-3 0-6-1-8-3l-12 12-8-8 12-12c-1-2-2-4-2-7z"
+          fill="url(#fw-wrench)" stroke="#555" stroke-width="1.5"/>
+  </g>
+</svg>

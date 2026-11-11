@@ -21,7 +21,7 @@ export function openingScreen(ctx: FlowContext): HTMLElement {
         'div',
         { class: 'panel-actions' },
         button('Skip', ctx.actions.next, { variant: 'secondary' }),
-        button(last ? 'Start mission' : 'Next', () => {
+        button(last ? 'Play!' : 'Next', () => {
           index += 1;
           draw();
         }),
@@ -40,7 +40,7 @@ export function bossCutsceneScreen(ctx: FlowContext): HTMLElement {
       { class: 'cutscene' },
       assetBox('cut_boss_arrives', { class: 'cutscene-image' }),
       h('p', { class: 'cutscene-text', text: BOSS_TEXT }),
-      h('div', { class: 'panel-actions' }, button('Choose your plan', ctx.actions.next)),
+      h('div', { class: 'panel-actions' }, button('Pick a plan', ctx.actions.next)),
     ),
   );
 }
