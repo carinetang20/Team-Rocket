@@ -14,7 +14,6 @@ export interface AssetEntry {
 }
 
 export const ASSETS: Record<string, AssetEntry> = {
-  bg_title: { file: 'backgrounds/title.png', width: 1920, height: 1080, label: 'Title background' },
   map_ground: { file: 'map/empty_map.png', width: 1440, height: 1024, label: 'Outpost map (no buildings)' },
   ui_logo: { file: 'ui/logo.svg', width: 960, height: 360, label: 'Game logo' },
   // Map-sized so it lines up with the map layers; faded in by Shield level (outpost.ts).

@@ -1,7 +1,7 @@
 import { STRATEGIES } from '../contract/types';
 import { SI_CREDIT } from '../content/dialogue';
 import type { FlowContext } from '../flow/flow';
-import { assetBackground, assetBox } from './assets';
+import { assetBox } from './assets';
 import { screen } from './common';
 import { button, h } from './dom';
 
@@ -26,5 +26,6 @@ export function titleScreen(ctx: FlowContext): HTMLElement {
     unlocked > 0 && h('p', { class: 'muted', text: `Endings ${unlocked}/${STRATEGIES.length}` }),
     h('p', { class: 'si-credit', text: SI_CREDIT }),
   );
-  return screen('title', assetBackground(h('div', { class: 'fullscreen' }, content), 'bg_title'));
+  // No background image: the Mars-sky gradient comes from CSS (.screen-title).
+  return screen('title', h('div', { class: 'fullscreen' }, content));
 }

@@ -19,11 +19,12 @@ Full-screen scenes are designed on a **1920 × 1080** canvas (16:9). The outpost
 
 ---
 
-## 1. Backgrounds & scenes
+## 1. Title screen
+
+No background image: the title uses a CSS Mars-sky gradient.
 
 | File | Size (px) | Used on | Notes |
 |---|---|---|---|
-| `backgrounds/title.png` | 1920 × 1080 | Title screen | Leave space top-centre for the logo |
 | `ui/logo.svg` | 960 × 360 | Title screen | ✅ Stand-in made: pixel "MARTIAN" + "Mars Outpost Survival" tagline. Artists may replace it (PNG is fine; update `assetManifest.ts`) |
 
 ## 2. Outpost map (Outpost View) ✅ delivered
@@ -162,7 +163,7 @@ Buttons, panels, stat bars, task cards, pop-ups and dialogue boxes are built in 
 
 ## Checklist summary
 
-- 3 backgrounds/logo
+- 1 logo (no title background)
 - 19 facility images + 1 shield overlay
 - 8 character images (+ optional expressions)
 - 12 icons
