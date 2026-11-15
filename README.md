@@ -4,6 +4,8 @@ A 15-day survival and resource-management browser game for kids aged 7–12, by 
 
 > **New here, or using an AI tool?** Start with [AGENTS.md](AGENTS.md).
 
+**Play it online:** https://carinetang20.github.io/Team-Rocket/
+
 ## Run it
 
 You need [Node.js](https://nodejs.org) (LTS version).
@@ -38,3 +40,16 @@ Other commands:
 ### Debug tools
 
 Press the **`** key (top-left of the keyboard), or open the game with `?debug` at the end of the URL. You can jump to hazard days, the final day, max out stats, or nearly die, to test every screen quickly.
+
+## Use of SI (Super Intelligence / AI tools)
+
+Made for the NASA Space Apps Challenge. We used an SI coding assistant, **Claude (Anthropic) via Claude Code**, and mark everything it produced:
+
+| What | SI use | How it's marked |
+|---|---|---|
+| **Code** | Much of the TypeScript was written with SI help and reviewed by the team. Game rules are covered by automated tests. | This section, plus the `si-disclosure` meta tag in [index.html](index.html) |
+| **Images** | `public/assets/ui/logo.svg`, `public/assets/facilities/shield_dome.svg`, and the icons `day`, `sleep`, `base_management`, `warning`, `lock` in `public/assets/icons/` | Visible "SI-generated" text on the logo and shield effect; "SI" badge on each icon; credit line on the title screen |
+| **Audio** | All music and jingles in `public/assets/music/` (made by [tools/music/generate.ts](tools/music/generate.ts), itself SI-written) and the sound effects in `public/assets/sounds/` | SI note in each WAV file's metadata (LIST/INFO comment); credit line on the title screen |
+| **Human-made** | Character art, opening cutscenes, hazard scenes, endings and the outpost map were drawn by our team | — |
+
+No NASA logos, branding or mission identifiers are used.

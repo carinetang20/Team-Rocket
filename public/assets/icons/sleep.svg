@@ -13,4 +13,6 @@
     <path d="M47 30h6l-6 7h6"/>
   </g>
   <path d="M54 16l1 2.2 2.2 1-2.2 1-1 2.2-1-2.2-2.2-1 2.2-1z" fill="#fef9c3"/>
+  <!-- Visible SI watermark badge (NASA Space Apps rule for SI-generated images) -->
+  <g><rect x="41" y="49" width="22" height="14" rx="3" fill="#0b1020" stroke="#ffffff" stroke-width="1"/><text x="52" y="59.6" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" fill="#ffffff">SI</text></g>
 </svg>

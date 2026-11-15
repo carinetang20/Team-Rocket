@@ -1,5 +1,8 @@
 // Chiptune music generator. Run with `npm run music`.
 //
+// SI disclosure: this program and the music it makes were created with an SI coding assistant
+// (Claude, by Anthropic). Every WAV it writes carries that note in its metadata (LIST/INFO chunk).
+//
 // Writes the game's background music and win/lose jingles to public/assets/music/ as WAV files.
 // Everything is synthesised here from note lists (square-wave lead + arpeggio, triangle bass,
 // noise drums), so the tracks are original and can be re-tuned by editing the notes below.
@@ -256,12 +259,34 @@ function render(song: Song): Float32Array {
   return out;
 }
 
+/** SI acknowledgement stored inside each WAV file (NASA Space Apps rule for SI-generated audio). */
+const SI_NOTE = 'SI-generated: chiptune made by an SI-written program (Claude, Anthropic) for Mars Outpost Survival.';
+
+/** RIFF LIST/INFO chunk: ICMT = comment, ISFT = software. Players ignore it; file browsers show it. */
+function infoChunk(): Buffer {
+  const field = (id: string, text: string) => {
+    let body = Buffer.from(`${text} `, 'latin1');
+    if (body.length % 2) body = Buffer.concat([body, Buffer.alloc(1)]); // chunks are word-aligned
+    const head = Buffer.alloc(8);
+    head.write(id, 0);
+    head.writeUInt32LE(Buffer.byteLength(text, 'latin1') + 1, 4);
+    return Buffer.concat([head, body]);
+  };
+  const fields = Buffer.concat([field('ICMT', SI_NOTE), field('ISFT', 'tools/music/generate.ts (SI-generated)')]);
+  const head = Buffer.alloc(12);
+  head.write('LIST', 0);
+  head.writeUInt32LE(4 + fields.length, 4);
+  head.write('INFO', 8);
+  return Buffer.concat([head, fields]);
+}
+
 function writeWav(file: string, samples: Float32Array): void {
   const data = Buffer.alloc(samples.length * 2);
   samples.forEach((s, i) => data.writeInt16LE(Math.round(Math.max(-1, Math.min(1, s)) * 32767), i * 2));
+  const info = infoChunk();
   const header = Buffer.alloc(44);
   header.write('RIFF', 0);
-  header.writeUInt32LE(36 + data.length, 4);
+  header.writeUInt32LE(36 + data.length + info.length, 4);
   header.write('WAVE', 8);
   header.write('fmt ', 12);
   header.writeUInt32LE(16, 16);
@@ -273,7 +298,7 @@ function writeWav(file: string, samples: Float32Array): void {
   header.writeUInt16LE(16, 34);
   header.write('data', 36);
   header.writeUInt32LE(data.length, 40);
-  writeFileSync(join(OUT_DIR, file), Buffer.concat([header, data]));
+  writeFileSync(join(OUT_DIR, file), Buffer.concat([header, data, info]));
   console.log(`${file}: ${(samples.length / SAMPLE_RATE).toFixed(1)}s, ${(data.length / 1024 / 1024).toFixed(2)} MB`);
 }
 

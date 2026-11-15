@@ -1065,3 +1065,12 @@ p { margin: 0.35em 0; }
 
 /* Shield force field: drawn above buildings, below characters and labels. Opacity is set from Shield level. */
 .map-shield-dome { transition: opacity 0.6s ease; }
+
+/* SI disclosure on the title screen: small but readable. */
+.si-credit {
+  max-width: 46ch;
+  margin: 18px auto 0;
+  font-size: 1rem;
+  line-height: 1.3;
+  color: var(--muted);
+}

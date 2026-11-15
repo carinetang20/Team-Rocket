@@ -211,3 +211,9 @@ export const ENDING_TEXT: Record<Strategy | 'bad', { title: string; text: string
     text: 'The plan failed. Try a different plan next time!',
   },
 };
+
+// ---------- Credits ----------
+
+/** SI disclosure shown on the title screen (NASA Space Apps rules for SI-generated content). */
+export const SI_CREDIT =
+  'SI-generated (made with AI): logo, small icons marked "SI", shield effect, music and sound effects. All other art was drawn by our team.';
