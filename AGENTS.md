@@ -42,23 +42,16 @@ public/assets/  Art team: image files (see docs/asset-list.md)
 docs/           Plans, decisions, contract, screen flow, asset list, design doc
 ```
 
-## Team roles & folder ownership
+## Team & editing
 
-| Role | Owner | Owns (planned folders) |
-|---|---|---|
-| **A — Game logic** ("the brain") | TBD | `src/engine/`, `src/config/`, `tools/simulator/`, engine tests |
-| **B — Gameplay flow** ("the glue") | jayvan | `src/screens/`, `src/flow/`, `src/content/` (dialogue, tutorial, tips), asset integration |
-| **C — UI design** ("the look") | TBD | `src/ui/` (presentational components), `src/styles/`, UI showcase page |
-| Art + UI/UX (non-coding) | Separate people | Deliver files into `assets/` per the asset list |
-
-**AI tools: stay inside your owner's folders.** If a change is needed in someone else's area, describe it in the pull request or open an issue instead of editing it.
+Folder ownership (the old Person A / B / C split) is **no longer enforced**. AI tools may edit any part of the repo a task needs, including `src/engine/`, `src/config/`, `src/contract/` and docs. The architecture rules below still apply.
 
 ## Rules for AI tools (and humans)
 
 1. **Never hard-code game balance numbers.** Every number (stats, costs, damage, thresholds, durations) lives in the game config (`src/config/`). Code reads from it.
 2. **The engine is pure logic, no UI.** `src/engine/` must not touch the DOM, CSS, or browser APIs (except via an injected save/load adapter). This lets the balance simulator run it headlessly.
 3. **UI components are presentational.** `src/ui/` components take data in and emit clicks/events out. They never import the engine directly. `src/screens/` and `src/flow/` connect UI to engine.
-4. **Follow the contract.** Engine ↔ UI communication goes only through the agreed state shape, actions, and engine events (to be written in `docs/contract.md`). Changing the contract requires agreement from A and B.
+4. **Follow the contract.** Engine ↔ UI communication goes only through the state shape, actions, and engine events in `src/contract/` (documented in `docs/contract.md`). When you change the contract, update both sides and the doc together.
 5. **TypeScript, strict mode.** Prefer clear names and short comments explaining *why*, since teammates read AI-written code.
 6. **Placeholders at final dimensions.** Until real art arrives, use plain labelled boxes sized exactly as specified in the asset list, so real art drops in with no code changes.
 7. **Kid-friendly UI.** Large text, icons plus colour (never colour alone), short plain-language messages, explain numbers with simple words.

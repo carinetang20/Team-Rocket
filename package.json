@@ -10,7 +10,8 @@
     "typecheck": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "balance": "tsx tools/simulator/balance.ts"
+    "balance": "tsx tools/simulator/balance.ts",
+    "music": "tsx tools/music/generate.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

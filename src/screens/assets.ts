@@ -10,6 +10,12 @@ function url(entry: AssetEntry): string {
   return `assets/${entry.file}`;
 }
 
+/** URL of an asset by manifest id (for <img> layers that need more than a background box). */
+export function assetUrl(id: string): string | null {
+  const entry = ASSETS[id];
+  return entry ? url(entry) : null;
+}
+
 function whenLoaded(src: string, onOk: () => void): void {
   const known = loaded.get(src);
   if (known === true) return onOk();

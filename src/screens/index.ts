@@ -10,7 +10,7 @@ import {
 } from './endgame';
 import { outpostScreen } from './outpost';
 import { dailyReportScreen, hazardSceneScreen, sleepSummaryScreen, warningScreen } from './reports';
-import { bossCutsceneScreen, openingScreen } from './story';
+import { openingScreen } from './story';
 import { titleScreen } from './title';
 
 export const SCREENS: Record<ScreenId, ScreenRenderer> = {
@@ -23,7 +23,6 @@ export const SCREENS: Record<ScreenId, ScreenRenderer> = {
   sleepSummary: sleepSummaryScreen,
   gameOver: gameOverScreen,
   whatWentWrong: whatWentWrongScreen,
-  bossCutscene: bossCutsceneScreen,
   chooseStrategy: chooseStrategyScreen,
   ending: endingScreen,
   results: resultsScreen,

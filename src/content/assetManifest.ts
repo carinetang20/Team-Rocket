@@ -3,8 +3,8 @@
 // Every image the game uses. Files go in public/assets/<file>. If a file is missing, the game
 // shows a grey placeholder box at this exact size, so art can be dropped in with no code changes.
 
-import type { FacilityId, FacilityStatus, Strategy } from '../contract/types';
-import { FACILITY_IDS } from '../contract/types';
+import type { FacilityId, Strategy } from '../contract/types';
+import { MAP_BUILDINGS, MAP_SIZE, buildingForFacility, type BuildingId } from './mapLayout';
 
 export interface AssetEntry {
   file: string;
@@ -15,56 +15,66 @@ export interface AssetEntry {
 
 export const ASSETS: Record<string, AssetEntry> = {
   bg_title: { file: 'backgrounds/title.png', width: 1920, height: 1080, label: 'Title background' },
-  bg_outpost: { file: 'backgrounds/outpost.png', width: 1920, height: 1080, label: 'Outpost background' },
-  ui_logo: { file: 'ui/logo.png', width: 960, height: 360, label: 'Game logo' },
-  facility_shield_dome: { file: 'facilities/shield_dome.png', width: 1920, height: 1080, label: 'Shield dome overlay' },
+  map_ground: { file: 'map/empty_map.png', width: 1440, height: 1024, label: 'Outpost map (no buildings)' },
+  ui_logo: { file: 'ui/logo.svg', width: 960, height: 360, label: 'Game logo' },
+  // Map-sized so it lines up with the map layers; faded in by Shield level (outpost.ts).
+  facility_shield_dome: { file: 'facilities/shield_dome.svg', width: 1440, height: 1024, label: 'Shield dome overlay' },
 
+  // Scene sprites and portraits are trimmed/scaled from the full art in characters/<name>.png.
   char_jasslyn_portrait: { file: 'characters/jasslyn_portrait.png', width: 400, height: 400, label: 'Jasslyn' },
-  char_jasslyn_scene: { file: 'characters/jasslyn_scene.png', width: 200, height: 360, label: 'Jasslyn' },
+  char_jasslyn_scene: { file: 'characters/jasslyn_scene.png', width: 206, height: 360, label: 'Jasslyn' },
   char_jamie_portrait: { file: 'characters/jamie_portrait.png', width: 400, height: 400, label: 'Jamie' },
-  char_jamie_scene: { file: 'characters/jamie_scene.png', width: 200, height: 360, label: 'Jamie' },
-  char_cat_portrait: { file: 'characters/cat_portrait.png', width: 400, height: 400, label: 'Cat' },
-  char_cat_scene: { file: 'characters/cat_scene.png', width: 160, height: 140, label: 'Cat' },
+  char_jamie_scene: { file: 'characters/jamie_scene.png', width: 229, height: 360, label: 'Jamie' },
+  char_cat_portrait: { file: 'characters/miau_portrait.png', width: 400, height: 400, label: 'Cat' },
+  char_cat_scene: { file: 'characters/miau_scene.png', width: 260, height: 171, label: 'Cat' },
   char_player_portrait: { file: 'characters/player_portrait.png', width: 400, height: 400, label: 'You' },
-  char_alien_boss: { file: 'characters/alien_boss.png', width: 1200, height: 1000, label: 'Alien boss' },
+  char_player_scene: { file: 'characters/player_scene.png', width: 229, height: 360, label: 'You' },
 
   cut_opening_1: { file: 'cutscenes/opening_1.png', width: 1920, height: 1080, label: 'Opening 1: the outpost' },
-  cut_opening_2: { file: 'cutscenes/opening_2.png', width: 1920, height: 1080, label: 'Opening 2: alien attack' },
-  cut_opening_3: { file: 'cutscenes/opening_3.png', width: 1920, height: 1080, label: 'Opening 3: distress signal' },
-  cut_boss_arrives: { file: 'cutscenes/boss_arrives.png', width: 1920, height: 1080, label: 'The alien returns' },
-  cut_game_over: { file: 'cutscenes/game_over.png', width: 1920, height: 1080, label: 'Game over' },
+  cut_opening_2: { file: 'cutscenes/opening_2.png', width: 1920, height: 1080, label: 'Opening 2: life on Mars' },
+  cut_opening_3: { file: 'cutscenes/opening_3.png', width: 1920, height: 1080, label: 'Opening 3: the ground shakes' },
+  cut_opening_4: { file: 'cutscenes/opening_4.png', width: 1920, height: 1080, label: 'Opening 4: alien attack' },
+  cut_opening_5: { file: 'cutscenes/opening_5.png', width: 1920, height: 1080, label: 'Opening 5: broken outpost' },
+  cut_opening_6: { file: 'cutscenes/opening_6.png', width: 1920, height: 1080, label: 'Opening 6: distress signal' },
+  cut_opening_7: { file: 'cutscenes/opening_7.png', width: 1920, height: 1080, label: 'Opening 7: player arrives' },
 };
 
-// ---------- Facilities ----------
+// ---------- Map buildings ----------
+// Each building layer is a full-map-size PNG (1440 × 1024), transparent except for that building,
+// so all layers line up exactly when stacked. Thumbnails are the same art trimmed to the building.
+// There is no separate art per status: the screen shows status with filters + icon + label.
 
-const FACILITY_ART: Record<FacilityId, { file: string; width: number; height: number; label: string }> = {
-  mainBase: { file: 'main_base', width: 400, height: 300, label: 'Main Base' },
-  shieldGenerator: { file: 'shield_generator', width: 300, height: 300, label: 'Shield Generator' },
-  powerStation: { file: 'power_station', width: 400, height: 260, label: 'Power Station' },
-  greenhouse: { file: 'greenhouse', width: 400, height: 260, label: 'Greenhouse' },
-  oxygenGenerator: { file: 'oxygen_generator', width: 260, height: 300, label: 'Oxygen Generator' },
-  waterRecycler: { file: 'water_recycler', width: 260, height: 300, label: 'Water Recycler' },
+const BUILDING_ART: Record<BuildingId, { file: string; thumbWidth: number; thumbHeight: number }> = {
+  mainBase: { file: 'main_base', thumbWidth: 400, thumbHeight: 415 },
+  radiationShelter: { file: 'radiation_shelter', thumbWidth: 400, thumbHeight: 163 },
+  lifeSupport: { file: 'water_oxygen', thumbWidth: 400, thumbHeight: 213 },
+  powerStation: { file: 'power_station', thumbWidth: 384, thumbHeight: 264 },
+  greenhouse: { file: 'greenhouse', thumbWidth: 400, thumbHeight: 150 },
 };
 
-const BASE_STATUSES: FacilityStatus[] = ['operational', 'damaged', 'unpowered'];
-
-export function facilityAssetId(id: FacilityId, status: FacilityStatus): string {
-  // Only the Greenhouse has a "growing" picture; others reuse "operational".
-  const s = status === 'growing' && id !== 'greenhouse' ? 'operational' : status;
-  return `facility_${id}_${s}`;
+export function mapLayerAssetId(id: BuildingId): string {
+  return `map_layer_${id}`;
 }
 
-for (const id of FACILITY_IDS) {
-  const art = FACILITY_ART[id];
-  const statuses = id === 'greenhouse' ? [...BASE_STATUSES, 'growing' as const] : BASE_STATUSES;
-  for (const status of statuses) {
-    ASSETS[facilityAssetId(id, status)] = {
-      file: `facilities/${art.file}_${status}.png`,
-      width: art.width,
-      height: art.height,
-      label: `${art.label} (${status})`,
-    };
-  }
+/** Neon outline drawn just outside the building (hover / growing). Generated from the layer's shape. */
+export function mapGlowAssetId(id: BuildingId): string {
+  return `map_glow_${id}`;
+}
+
+export function mapThumbAssetId(id: BuildingId): string {
+  return `map_thumb_${id}`;
+}
+
+/** Small picture for a facility (e.g. Report table): the thumbnail of the building it belongs to. */
+export function facilityThumbAssetId(id: FacilityId): string {
+  return mapThumbAssetId(buildingForFacility(id).id);
+}
+
+for (const b of MAP_BUILDINGS) {
+  const art = BUILDING_ART[b.id];
+  ASSETS[mapLayerAssetId(b.id)] = { file: `map/${art.file}.png`, width: MAP_SIZE.width, height: MAP_SIZE.height, label: b.name };
+  ASSETS[mapGlowAssetId(b.id)] = { file: `map/glow/${art.file}.png`, width: MAP_SIZE.width, height: MAP_SIZE.height, label: `${b.name} glow` };
+  ASSETS[mapThumbAssetId(b.id)] = { file: `map/thumbs/${art.file}.png`, width: art.thumbWidth, height: art.thumbHeight, label: b.name };
 }
 
 // ---------- Icons ----------
@@ -130,6 +140,15 @@ export function endingAssetId(ending: Strategy | 'bad'): string {
   return `ending_${ending}`;
 }
 
-for (const ending of ['shield', 'food', 'power', 'evacuate', 'bad'] as const) {
-  ASSETS[endingAssetId(ending)] = { file: `endings/${ending}.png`, width: 1920, height: 1080, label: `Ending: ${ending}` };
+// The 'evacuate' strategy id is kept for the engine contract, but the player-facing ending is now
+// "Fight Back" (decision D8), so its art file is named retaliate.png.
+const ENDING_FILES: Record<Strategy | 'bad', string> = {
+  shield: 'shield',
+  food: 'food',
+  power: 'power',
+  evacuate: 'retaliate',
+  bad: 'bad',
+};
+for (const [ending, file] of Object.entries(ENDING_FILES)) {
+  ASSETS[endingAssetId(ending as Strategy | 'bad')] = { file: `endings/${file}.png`, width: 1920, height: 1080, label: `Ending: ${file}` };
 }

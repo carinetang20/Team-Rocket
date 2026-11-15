@@ -40,6 +40,32 @@ Guiding principle: the game should be **educationally challenging, not needlessl
 ### D5 — Original companion character *(2026-11-08)*
 - "Meowth" is an existing copyrighted character and must not be used. Keep a companion cat with an **original name and design** (name TBD at kickoff).
 
+### D6 — Outpost View is a clickable map with 5 buildings *(2026-11-15)*
+- The Outpost View is one illustrated map (1440 × 1024). Players click the buildings themselves to open their upgrades.
+- **5 buildings on the map, 6 facilities in the engine.** Oxygen Generator and Water Recycler share one building, **"Water & Oxygen"**, whose pop-up shows a section for each. The engine is unchanged: they keep separate status, tasks and production.
+- The Shield Generator is shown to players as **"Radiation Shelter"** (config `facilityNames` + UI text). Its id stays `shieldGenerator`.
+- No separate art per facility status: status is shown with visual effects plus an icon and word.
+- Layout lives in `src/content/mapLayout.ts`.
+
+### D7 — Sound effects *(2026-11-15)*
+- Sound effects play for actions and events, with a mute button on every screen. The setting is saved per device.
+- Current sounds are generated placeholders. Replace them by file name (see `docs/asset-list.md` §6).
+
+### D8 — "Evacuate" ending becomes "Fight Back" *(2026-11-15)*
+- Overrides design doc Ending 4. Instead of flying home, the crew fights back against the alien. It still needs high Health.
+- Player-facing text only: the strategy id stays `evacuate` in the contract/engine, so no engine change is needed. Art: `endings/retaliate.png`.
+
+### D9 — No boss cutscene, alien portrait, or game-over picture *(2026-11-15)*
+- Day 15 goes straight to **Choose strategy**; Jamie announces the alien there. The Day 14 boss warning is also told by Jamie.
+- **Game over** reuses the bad-ending picture (`endings/bad.png`).
+- Dropped assets: `characters/alien_boss.png`, `cutscenes/boss_arrives.png`, `cutscenes/game_over.png`.
+
+### D10 — Small flow decisions *(2026-11-15)*
+- **Try Again** skips the opening story but replays the tutorial (players can press Skip).
+- **Saving** stays automatic at the start of each day only; no mid-day saves.
+- The **plan choice** shows each stat next to what's needed (e.g. "15 / 50").
+- The cat has no "Feed" button; talking to the cat is just for fun.
+
 ---
 
 ## Design issues — resolved by Person A *(2026-11-09)*

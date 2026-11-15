@@ -79,7 +79,7 @@ export function warningScreen(ctx: FlowContext): HTMLElement {
       'warning',
       panel(
         'Alien Tomorrow!',
-        [assetBox('char_alien_boss', { class: 'warning-image' }), h('p', { text: BOSS_WARNING_TEXT })],
+        [dialogueBox('jamie', BOSS_WARNING_TEXT, [])],
         [button('Got it', ctx.actions.next)],
       ),
     );

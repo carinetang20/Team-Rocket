@@ -10,7 +10,8 @@ export function titleScreen(ctx: FlowContext): HTMLElement {
     'div',
     { class: 'title-content' },
     assetBox('ui_logo', { class: 'logo' }),
-    h('h1', { text: 'MARTIAN' }),
+    // The logo image shows the name; the heading stays for screen readers.
+    h('h1', { class: 'sr-only', text: 'MARTIAN: Mars Outpost Survival' }),
     h(
       'div',
       { class: 'title-buttons' },

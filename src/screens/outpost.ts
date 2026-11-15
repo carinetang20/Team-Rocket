@@ -1,25 +1,34 @@
-// Outpost View — the main screen. HUD, facilities, crew, and the pop-ups opened from here
-// (task menu, Base Management panel, dialogue, tutorial).
+// Outpost View — the main screen. HUD, the outpost map (clickable buildings + crew), and the
+// pop-ups opened from here (upgrades, Base Management panel, dialogue, tutorial).
 
-import type { FacilityId, GameState, ResourceId, TaskEffectPreview, TaskView } from '../contract/types';
+import type { FacilityStatus, GameState, ResourceId, TaskEffectPreview, TaskView } from '../contract/types';
 import { CORE_STAT_IDS, FACILITY_IDS } from '../contract/types';
-import { facilityAssetId, taskAssetId } from '../content/assetManifest';
+import { ASSETS, facilityThumbAssetId, mapGlowAssetId, mapLayerAssetId, taskAssetId } from '../content/assetManifest';
 import {
   FACILITY_NAMES,
   NPC_LINES,
   RESOURCE_LABELS,
   SPEAKER_NAMES,
+  STATUS_ICONS,
   STATUS_LABELS,
   TUTORIAL,
   lowWarningText,
+  type Speaker,
 } from '../content/dialogue';
+import {
+  MAP_BUILDINGS,
+  MAP_CHARACTERS,
+  MAP_SIZE,
+  getBuilding,
+  type BuildingId,
+  type MapBuilding,
+} from '../content/mapLayout';
 import { filterEvents } from '../flow/events';
 import type { FlowContext } from '../flow/flow';
-import { assetBackground, assetBox } from './assets';
+import { assetBackground, assetBox, assetUrl } from './assets';
 import { dialogueBox, modal, resourceChip, screen } from './common';
 import { button, clickable, h } from './dom';
-
-const CREW = ['jasslyn', 'jamie', 'cat'] as const;
+import { isSolidAt, prepareMask } from './mapHitTest';
 
 export function outpostScreen(ctx: FlowContext): HTMLElement {
   const s = ctx.state;
@@ -28,21 +37,6 @@ export function outpostScreen(ctx: FlowContext): HTMLElement {
   const lastDay = s.upcoming?.kind === 'boss';
   const warnings = filterEvents(ctx.morningEvents, 'lowResourceWarning');
 
-  const scene = assetBackground(h('div', { class: 'scene' }), 'bg_outpost');
-  for (const id of FACILITY_IDS) scene.append(facilityTile(ctx, s, id));
-
-  const crew = h(
-    'div',
-    { class: 'crew' },
-    ...CREW.map((sp) =>
-      clickable(
-        h('div', { class: 'crew-member' }, assetBox(`char_${sp}_scene`, { compact: true }), h('span', { text: SPEAKER_NAMES[sp] })),
-        () => ctx.actions.openModal({ kind: 'dialogue', speaker: sp }),
-        `Talk to ${SPEAKER_NAMES[sp]}`,
-      ),
-    ),
-  );
-
   const footer = h(
     'footer',
     { class: 'outpost-footer' },
@@ -50,7 +44,7 @@ export function outpostScreen(ctx: FlowContext): HTMLElement {
       class: 'muted',
       text: lastDay ? `Last day · AP ${s.ap}` : `AP ${s.ap}`,
     }),
-    button(lastDay ? 'End the Day?' : 'End the Day?', ctx.actions.sleep),
+    withIcon(button(lastDay ? 'End the Day?' : 'End the Day?', ctx.actions.sleep), 'icon_sleep'),
   );
 
   return screen(
@@ -63,7 +57,7 @@ export function outpostScreen(ctx: FlowContext): HTMLElement {
         assetBox('char_jamie_portrait', { compact: true, class: 'mini-portrait' }),
         h('div', {}, h('strong', { text: 'Jamie:' }), ...warnings.map((w) => h('p', { text: lowWarningText(w) }))),
       ),
-    h('div', { class: 'outpost-main' }, scene, crew),
+    h('div', { class: 'outpost-main' }, h('div', { class: 'map-frame' }, mapScene(ctx, s))),
     footer,
     modalFor(ctx, s),
     tutorialOverlay(ctx),
@@ -93,9 +87,9 @@ function hud(ctx: FlowContext, s: GameState): HTMLElement {
     h(
       'div',
       { class: 'hud-panel' },
-      h('div', { class: 'hud-day', text: `DAY ${s.day}` }),
+      h('div', { class: 'hud-day' }, assetBox('icon_day', { compact: true, class: 'icon hud-icon' }), h('span', { text: `DAY ${s.day}` })),
       hazardLabel &&
-        h('div', { class: 'hud-hazard' }, h('span', { class: 'hud-hazard-mark', text: '!' }), h('span', { text: hazardLabel })),
+        h('div', { class: 'hud-hazard' }, assetBox('icon_warning', { compact: true, class: 'icon hud-icon' }), h('span', { text: hazardLabel })),
       h(
         'div',
         { class: 'hud-group', title: 'Action Points' },
@@ -109,8 +103,17 @@ function hud(ctx: FlowContext, s: GameState): HTMLElement {
       { class: 'hud-panel' },
       h('div', { class: 'hud-stats hud-life' }, statBar(ctx, s, 'oxygen'), statBar(ctx, s, 'water')),
     ),
-    button('Report', () => ctx.actions.openModal({ kind: 'baseManagement' }), { variant: 'secondary' }),
+    withIcon(button('Report', () => ctx.actions.openModal({ kind: 'baseManagement' }), { variant: 'secondary' }), 'icon_base_management'),
   );
+}
+
+/** Put a small icon in front of a button's text (icon + word, never icon alone). */
+function withIcon(btn: HTMLButtonElement, iconId: string): HTMLButtonElement {
+  btn.classList.add('btn-with-icon');
+  const icon = assetBox(iconId, { compact: true, class: 'icon btn-icon' });
+  icon.setAttribute('aria-hidden', 'true'); // decorative: the button's word already says it
+  btn.prepend(icon);
+  return btn;
 }
 
 function statBar(ctx: FlowContext, s: GameState, r: ResourceId): HTMLElement {
@@ -131,21 +134,151 @@ function statBar(ctx: FlowContext, s: GameState, r: ResourceId): HTMLElement {
   );
 }
 
-// ---------- Facilities ----------
+// ---------- Outpost map ----------
+//
+// Layers, back to front: empty map (background) → one full-size image per building →
+// characters → name labels. Every layer covers the whole map, so clicks are handled once on
+// the map and checked against each building's visible pixels (see mapHitTest.ts).
 
-function facilityTile(ctx: FlowContext, s: GameState, id: FacilityId): HTMLElement {
-  const f = s.facilities[id];
-  return clickable(
-    h(
-      'div',
-      { class: `facility status-${f.status}` },
-      assetBox(facilityAssetId(id, f.status)),
-      h('span', { class: 'facility-name', text: FACILITY_NAMES[id] }),
-      h('span', { class: `status-chip chip-${f.status}`, text: STATUS_LABELS[f.status] }),
-    ),
-    () => ctx.actions.openModal({ kind: 'tasks', facility: id }),
-    `${FACILITY_NAMES[id]}: ${STATUS_LABELS[f.status]}. Open tasks.`,
+/** Worst status wins, so a shared building (Water & Oxygen) shows a problem if either machine has one. */
+const STATUS_RANK: Record<FacilityStatus, number> = { operational: 0, growing: 1, unpowered: 2, damaged: 3 };
+
+function buildingStatus(s: GameState, b: MapBuilding): FacilityStatus {
+  return b.facilities
+    .map((id) => s.facilities[id].status)
+    .reduce((worst, st) => (STATUS_RANK[st] > STATUS_RANK[worst] ? st : worst));
+}
+
+function statusChip(status: FacilityStatus): HTMLElement {
+  return h('span', { class: `status-chip chip-${status}`, text: `${STATUS_ICONS[status]} ${STATUS_LABELS[status]}` });
+}
+
+/** Map pixels → percentage of the map, so positions scale with the map. */
+const pctX = (x: number): string => `${(x / MAP_SIZE.width) * 100}%`;
+const pctY = (y: number): string => `${(y / MAP_SIZE.height) * 100}%`;
+
+function mapScene(ctx: FlowContext, s: GameState): HTMLElement {
+  const stage = assetBackground(h('div', { class: 'map-stage' }), 'map_ground');
+  const buildings: { b: MapBuilding; src: string; parts: HTMLElement[] }[] = [];
+  const labels: HTMLElement[] = [];
+  const open = (id: BuildingId) => ctx.actions.openModal({ kind: 'tasks', building: id });
+
+  let hovered: BuildingId | null = null;
+  const setHover = (id: BuildingId | null) => {
+    if (id === hovered) return;
+    hovered = id;
+    for (const x of buildings) for (const el of x.parts) el.classList.toggle('hover', x.b.id === id);
+    stage.classList.toggle('pointing', id !== null);
+  };
+
+  for (const b of MAP_BUILDINGS) {
+    const src = assetUrl(mapLayerAssetId(b.id));
+    if (!src) continue;
+    prepareMask(src);
+    const status = buildingStatus(s, b);
+    const img = h('img', {
+      class: `map-layer map-building status-${status}`,
+      attrs: { src, alt: '', 'aria-hidden': 'true', draggable: 'false' },
+    });
+    // Separate outline image instead of a CSS glow: a CSS glow would show through see-through
+    // parts of the art (greenhouse glass).
+    const glowSrc = assetUrl(mapGlowAssetId(b.id));
+    const glow =
+      glowSrc &&
+      h('img', {
+        class: `map-layer map-glow status-${status}`,
+        attrs: { src: glowSrc, alt: '', 'aria-hidden': 'true', draggable: 'false' },
+      });
+    // The label is the keyboard/screen-reader way in; mouse and touch can also click the building itself.
+    const label = h(
+      'button',
+      {
+        class: `map-label status-${status}`,
+        style: `left:${pctX(b.label.x)};top:${pctY(b.label.y)}`,
+        attrs: { type: 'button', 'data-building': b.id, 'aria-label': `${b.name}: ${STATUS_LABELS[status]}. Open upgrades.` },
+        onClick: () => open(b.id),
+      },
+      h('span', { class: 'map-label-name', text: b.name }),
+      statusChip(status),
+    );
+    label.addEventListener('focus', () => setHover(b.id));
+    label.addEventListener('blur', () => setHover(null));
+    stage.append(img);
+    if (glow) stage.append(glow);
+    labels.push(label);
+    buildings.push({ b, src, parts: glow ? [img, glow, label] : [img, label] });
+  }
+
+  const dome = shieldDome(s);
+  if (dome) stage.append(dome);
+
+  for (const c of MAP_CHARACTERS) stage.append(mapCharacter(ctx, c));
+  stage.append(...labels);
+
+  const buildingAt = (e: MouseEvent): MapBuilding | null => {
+    const r = stage.getBoundingClientRect();
+    const fx = (e.clientX - r.left) / r.width;
+    const fy = (e.clientY - r.top) / r.height;
+    for (let i = buildings.length - 1; i >= 0; i--) {
+      const x = buildings[i]!;
+      if (isSolidAt(x.src, fx, fy)) return x.b;
+    }
+    return null;
+  };
+
+  stage.addEventListener('pointermove', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.map-char')) return setHover(null);
+    const label = target.closest<HTMLElement>('.map-label');
+    setHover(label ? (label.dataset.building as BuildingId) : (buildingAt(e)?.id ?? null));
+  });
+  stage.addEventListener('pointerleave', () => setHover(null));
+  stage.addEventListener('click', (e) => {
+    // Labels and characters handle their own clicks.
+    if ((e.target as HTMLElement).closest('.map-label, .map-char')) return;
+    const b = buildingAt(e);
+    if (b) open(b.id);
+  });
+
+  return stage;
+}
+
+/**
+ * Force-field dome over the outpost. Its strength follows the Shield bar: invisible at 0,
+ * fully visible when Shield is full, so kids can see their shield grow.
+ */
+function shieldDome(s: GameState): HTMLElement | null {
+  const src = assetUrl('facility_shield_dome');
+  const shield = s.resources.shield;
+  if (!src || shield.max <= 0 || shield.current <= 0) return null;
+  const strength = Math.min(1, shield.current / shield.max);
+  return h('img', {
+    class: 'map-layer map-shield-dome',
+    style: `opacity:${strength.toFixed(2)}`,
+    attrs: { src, alt: '', 'aria-hidden': 'true', draggable: 'false' },
+  });
+}
+
+function mapCharacter(ctx: FlowContext, c: (typeof MAP_CHARACTERS)[number]): HTMLElement {
+  const art = ASSETS[`char_${c.speaker}_scene`];
+  const width = art ? (c.height * art.width) / art.height : c.height * 0.6;
+  const el = h(
+    'div',
+    {
+      class: `map-char map-char-${c.speaker}`,
+      style: `left:${pctX(c.x)};top:${pctY(c.feetY - c.height)};width:${pctX(width)};height:${pctY(c.height)}`,
+    },
+    assetBox(`char_${c.speaker}_scene`, { compact: true }),
+    h('span', { class: 'map-char-name', text: SPEAKER_NAMES[c.speaker] }),
   );
+  const speaker = c.speaker;
+  if (!c.talks || speaker === 'player') {
+    // The player just stands on the map with a "You" tag; not clickable.
+    el.classList.add('map-char-you');
+    el.setAttribute('aria-hidden', 'true');
+    return el;
+  }
+  return clickable(el, () => ctx.actions.openModal({ kind: 'dialogue', speaker }), `Talk to ${SPEAKER_NAMES[speaker]}`);
 }
 
 // ---------- Pop-ups ----------
@@ -155,7 +288,7 @@ function modalFor(ctx: FlowContext, s: GameState): HTMLElement | null {
   if (!m) return null;
   switch (m.kind) {
     case 'tasks':
-      return tasksModal(ctx, s, m.facility);
+      return tasksModal(ctx, s, m.building);
     case 'baseManagement':
       return baseManagementModal(ctx, s);
     case 'dialogue':
@@ -163,15 +296,29 @@ function modalFor(ctx: FlowContext, s: GameState): HTMLElement | null {
   }
 }
 
-function tasksModal(ctx: FlowContext, _s: GameState, facility: FacilityId): HTMLElement {
-  const tasks = ctx.tasks.filter((t) => t.facility === facility);
-  return modal(
-    FACILITY_NAMES[facility],
-    [
-      h('p', { class: 'task-modal-prompt', text: 'Choose your upgrades:' }),
+function tasksModal(ctx: FlowContext, s: GameState, buildingId: BuildingId): HTMLElement {
+  const b = getBuilding(buildingId);
+  // A shared building gets one section per machine, each with its own status, so the player
+  // can see which half (e.g. Water or Oxygen) needs fixing.
+  const shared = b.facilities.length > 1;
+  const sections = b.facilities.map((facility) => {
+    const tasks = ctx.tasks.filter((t) => t.facility === facility);
+    return h(
+      'section',
+      { class: 'task-section' },
+      shared &&
+        h('h3', { class: 'task-section-title' }, h('span', { text: FACILITY_NAMES[facility] }), statusChip(s.facilities[facility].status)),
       tasks.length
         ? h('div', { class: 'task-list' }, ...tasks.map((t) => taskCard(ctx, t)))
         : h('p', { text: 'No tasks here yet.' }),
+    );
+  });
+  return modal(
+    b.name,
+    [
+      h('p', { class: 'building-blurb', text: b.blurb }),
+      h('p', { class: 'task-modal-prompt', text: 'Choose your upgrades:' }),
+      ...sections,
       // Shared bottom placeholder for the Do it action (per-card button sits in each card slot too).
       h('div', { class: 'task-modal-footer-slot', attrs: { 'data-placeholder': 'do-it-area' } }),
     ],
@@ -215,7 +362,9 @@ function taskCard(ctx: FlowContext, t: TaskView): HTMLElement {
     t.effects.length > 0 &&
       h('ul', { class: 'task-effects', attrs: { 'aria-label': 'What this changes' } }, ...t.effects.map(effectChip)),
     t.maxLevel !== null && h('p', { class: 'muted small', text: `Lv ${t.level}/${t.maxLevel}` }),
-    !t.available && t.lockedReason && h('p', { class: 'locked-reason', text: t.lockedReason }),
+    !t.available &&
+      t.lockedReason &&
+      h('p', { class: 'locked-reason' }, assetBox('icon_lock', { compact: true, class: 'icon' }), h('span', { text: t.lockedReason })),
     h(
       'div',
       { class: 'task-card-action-slot', attrs: { 'data-placeholder': 'do-it-button' } },
@@ -233,9 +382,9 @@ function baseManagementModal(ctx: FlowContext, s: GameState): HTMLElement {
     return h(
       'tr',
       {},
-      h('td', {}, assetBox(facilityAssetId(id, f.status), { compact: true, class: 'icon' })),
+      h('td', {}, assetBox(facilityThumbAssetId(id), { compact: true, class: `icon map-thumb status-${f.status}` })),
       h('td', { text: FACILITY_NAMES[id] }),
-      h('td', {}, h('span', { class: `status-chip chip-${f.status}`, text: STATUS_LABELS[f.status] })),
+      h('td', {}, statusChip(f.status)),
       h('td', {}, makes.length ? h('div', { class: 'chip-row' }, ...makes) : h('span', { text: '—' })),
       h('td', {}, f.powerUse ? resourceChip('power', `−${f.powerUse}`, { tone: 'down' }) : h('span', { text: '—' })),
     );
@@ -259,7 +408,7 @@ function baseManagementModal(ctx: FlowContext, s: GameState): HTMLElement {
   );
 }
 
-function dialogueModal(ctx: FlowContext, speaker: (typeof CREW)[number]): HTMLElement {
+function dialogueModal(ctx: FlowContext, speaker: Exclude<Speaker, 'player'>): HTMLElement {
   const lines = NPC_LINES[speaker];
   let i = 0;
   const holder = h('div', {});
@@ -271,7 +420,6 @@ function dialogueModal(ctx: FlowContext, speaker: (typeof CREW)[number]): HTMLEl
             i += 1;
             draw();
           }, { variant: 'secondary' }),
-        speaker === 'cat' && button('Feed (coming later)', () => undefined, { disabled: true }),
       ]),
     );
   };

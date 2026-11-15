@@ -1,6 +1,6 @@
-// Cutscene-style screens: opening story and the boss arriving.
+// Cutscene-style screen: the opening story.
 
-import { BOSS_TEXT, OPENING_SLIDES } from '../content/dialogue';
+import { OPENING_SLIDES } from '../content/dialogue';
 import type { FlowContext } from '../flow/flow';
 import { assetBox } from './assets';
 import { screen } from './common';
@@ -30,17 +30,4 @@ export function openingScreen(ctx: FlowContext): HTMLElement {
   };
   draw();
   return screen('opening', stage);
-}
-
-export function bossCutsceneScreen(ctx: FlowContext): HTMLElement {
-  return screen(
-    'boss',
-    h(
-      'div',
-      { class: 'cutscene' },
-      assetBox('cut_boss_arrives', { class: 'cutscene-image' }),
-      h('p', { class: 'cutscene-text', text: BOSS_TEXT }),
-      h('div', { class: 'panel-actions' }, button('Pick a plan', ctx.actions.next)),
-    ),
-  );
 }

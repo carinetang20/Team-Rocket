@@ -36,8 +36,8 @@ export const RESOURCE_LABELS: Record<ResourceId, string> = {
 
 export const FACILITY_NAMES: Record<FacilityId, string> = {
   mainBase: 'Main Base',
-  shieldGenerator: 'Shield',
-  powerStation: 'Power',
+  shieldGenerator: 'Radiation Shelter',
+  powerStation: 'Power Station',
   greenhouse: 'Greenhouse',
   oxygenGenerator: 'Oxygen',
   waterRecycler: 'Water',
@@ -50,12 +50,24 @@ export const STATUS_LABELS: Record<FacilityStatus, string> = {
   growing: 'Growing',
 };
 
+/** Shown next to the status word so status never relies on colour alone. */
+export const STATUS_ICONS: Record<FacilityStatus, string> = {
+  operational: '✔',
+  damaged: '⚠',
+  unpowered: '🔌',
+  growing: '🌱',
+};
+
 // ---------- Story ----------
 
 export const OPENING_SLIDES: { asset: string; text: string }[] = [
   { asset: 'cut_opening_1', text: 'Astronauts built a home on Mars.' },
-  { asset: 'cut_opening_2', text: 'Then a giant alien smashed it!' },
-  { asset: 'cut_opening_3', text: 'They need YOU to help rebuild.' },
+  { asset: 'cut_opening_2', text: 'One day, a big object was found above the planet!' },
+  { asset: 'cut_opening_3', text: 'Suddenly, the ground began to shake...' },
+  { asset: 'cut_opening_4', text: 'It was a giant alien!' },
+  { asset: 'cut_opening_5', text: 'It smashed the outpost. Machines broke. Supplies ran low.' },
+  { asset: 'cut_opening_6', text: 'The crew sent a call for help to Earth.' },
+  { asset: 'cut_opening_7', text: 'Help is here. It is YOU!' },
 ];
 
 export const TUTORIAL: Line[] = [
@@ -66,7 +78,7 @@ export const TUTORIAL: Line[] = [
   { speaker: 'jasslyn', text: 'When AP is gone, press Sleep. Night uses supplies — and makes new ones.' },
 ];
 
-export const BOSS_TEXT = 'The alien is back! Pick a plan.';
+export const BOSS_TEXT = 'Day 15. The alien is back! Which plan will stop it?';
 
 // ---------- Characters you can click ----------
 
@@ -103,7 +115,7 @@ export const HAZARD_HINTS: Record<string, string> = {
 };
 
 export const GENERIC_HAZARD_HINT = 'Use your AP to get ready!';
-export const BOSS_WARNING_TEXT = 'Alien tomorrow! Last day to prepare. Pick a plan: Shield, Food, Power, or Evacuate.';
+export const BOSS_WARNING_TEXT = 'Alien tomorrow! Last day to prepare. Pick a plan: Shield, Food, Power, or Fight Back.';
 
 const PROTECTION_TIPS: Partial<Record<ResourceId, string>> = {
   shield: 'Stronger walls would help next time.',
@@ -174,7 +186,7 @@ export const STRATEGY_INFO: Record<Strategy, { title: string; description: strin
   shield: { title: 'Use the Shield', description: 'Block the alien with a strong shield.' },
   food: { title: 'Give Food', description: 'Feed the alien so it leaves happy.' },
   power: { title: 'Zap with Power', description: 'Shock the alien with lots of power.' },
-  evacuate: { title: 'Fly Home', description: 'Escape to Earth. Needs high Health.' },
+  evacuate: { title: 'Fight Back', description: 'Stand together and fight the alien. Needs high Health.' },
 };
 
 export const ENDING_TEXT: Record<Strategy | 'bad', { title: string; text: string }> = {
@@ -191,8 +203,8 @@ export const ENDING_TEXT: Record<Strategy | 'bad', { title: string; text: string
     text: 'A big shock scares the alien away!',
   },
   evacuate: {
-    title: 'Home Safe',
-    text: 'The crew flies home to Earth.',
+    title: 'We Fought Back!',
+    text: 'The strong, healthy crew stands together. The alien runs away!',
   },
   bad: {
     title: 'Oh No...',

@@ -5,6 +5,24 @@ import type { Strategy } from '../contract/types';
 
 const SAVE_KEY = 'mars-outpost.save.v1';
 const PROFILE_KEY = 'mars-outpost.profile.v1';
+const MUTED_KEY = 'mars-outpost.muted.v1';
+
+/** Sound on/off is per device, separate from game saves (clearing a save keeps it). */
+export function loadMuted(): boolean {
+  try {
+    return localStorage.getItem(MUTED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function saveMuted(muted: boolean): void {
+  try {
+    localStorage.setItem(MUTED_KEY, muted ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+}
 
 /** Data kept across runs (decision D4: endings collection). */
 export interface Profile {

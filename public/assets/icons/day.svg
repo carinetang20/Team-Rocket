@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="day-page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="day-top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f97362"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <radialGradient id="day-sun" cx="40%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#fff3a3"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </radialGradient>
+  </defs>
+  <rect x="9" y="12" width="46" height="44" rx="7" fill="url(#day-page)" stroke="#475569" stroke-width="1.5"/>
+  <path d="M9 19a7 7 0 0 1 7-7h32a7 7 0 0 1 7 7v6H9v-6z" fill="url(#day-top)" stroke="#9a3412" stroke-width="1"/>
+  <rect x="19" y="6" width="5" height="12" rx="2.5" fill="#334155"/>
+  <rect x="40" y="6" width="5" height="12" rx="2.5" fill="#334155"/>
+  <g stroke="#f59e0b" stroke-width="3" stroke-linecap="round">
+    <path d="M32 30v-2M32 52v-2M20 40h2M42 40h2M23.5 31.5l1.4 1.4M39.1 47.1l1.4 1.4M23.5 48.5l1.4-1.4M39.1 32.9l1.4-1.4"/>
+  </g>
+  <circle cx="32" cy="40" r="7" fill="url(#day-sun)" stroke="#b45309" stroke-width="1"/>
+</svg>

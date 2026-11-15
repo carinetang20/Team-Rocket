@@ -3,7 +3,7 @@
 import { STRATEGY_STAT } from '../contract/engine';
 import { RESOURCE_IDS, STRATEGIES } from '../contract/types';
 import { endingAssetId } from '../content/assetManifest';
-import { ENDING_TEXT, STRATEGY_INFO, deathExplanation } from '../content/dialogue';
+import { BOSS_TEXT, ENDING_TEXT, STRATEGY_INFO, deathExplanation } from '../content/dialogue';
 import type { FlowContext } from '../flow/flow';
 import { assetBox } from './assets';
 import { dialogueBox, panel, resourceChip, screen } from './common';
@@ -15,7 +15,8 @@ export function gameOverScreen(ctx: FlowContext): HTMLElement {
     h(
       'div',
       { class: 'cutscene' },
-      assetBox('cut_game_over', { class: 'cutscene-image' }),
+      // Same picture as the bad ending: both mean the outpost was lost.
+      assetBox(endingAssetId('bad'), { class: 'cutscene-image' }),
       h('h2', { text: 'GAME OVER' }),
       h('p', { class: 'cutscene-text', text: 'Health hit zero.' }),
       h(
@@ -73,6 +74,7 @@ export function chooseStrategyScreen(ctx: FlowContext): HTMLElement {
     panel(
       'Stop the alien!',
       [
+        dialogueBox('jamie', BOSS_TEXT, []),
         h('p', { text: 'Pick one plan. Only that number counts.' }),
         h('div', { class: 'strategy-grid' }, ...cards),
       ],

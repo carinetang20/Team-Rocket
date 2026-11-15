@@ -229,7 +229,7 @@ p { margin: 0.35em 0; }
   align-items: center;
   padding: 24px;
 }
-.screen-title .logo { display: none; }
+.screen-title .logo { width: min(640px, 86vw); margin-bottom: 12px; }
 .screen-title h1 {
   color: #fff;
   text-shadow:
@@ -396,42 +396,125 @@ p { margin: 0.35em 0; }
 }
 .mini-portrait { width: 48px; flex: none; }
 
-/* ---------- Outpost scene ---------- */
+/* ---------- Outpost map ---------- */
 
 .outpost-main { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
-.scene {
+
+/* The frame takes whatever space is left; the map inside keeps its 1440×1024 shape and is as
+   big as fits (container query units). Leftover space shows a dark Mars glow, not plain bars. */
+.map-frame {
   flex: 1;
+  min-height: 300px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  padding: 20px 14px 28px;
+  place-items: center;
+  container-type: size;
   border-radius: var(--radius);
-  background:
-    linear-gradient(180deg, rgba(8, 16, 28, 0.25), rgba(90, 35, 12, 0.35)),
-    #5a2814;
-  border: 2px solid var(--neon-dim);
-  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.35);
-  min-height: 420px;
-  align-content: start;
+  background: radial-gradient(ellipse at center, #3a1408, #120604 75%);
+  overflow: hidden;
 }
-.facility, .crew-member {
+.map-stage {
+  position: relative;
+  width: 100%;
+  width: min(100cqw, 100cqh * 1440 / 1024);
+  aspect-ratio: 1440 / 1024;
+  border-radius: var(--radius);
+  overflow: hidden;
+  /* Outline, not border: a border would squash the map's shape and misalign the layers. */
+  outline: 2px solid var(--neon-dim);
+  outline-offset: -2px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.map-stage.pointing { cursor: pointer; }
+
+/* Every building layer is full-map size; clicks are handled by the map (pixel check), not the image. */
+.map-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  --status-fx: brightness(1);
+  --glow-fx: brightness(1);
+  filter: var(--status-fx) var(--glow-fx);
+  transition: filter 0.15s ease;
+}
+
+/* Status effects (no separate art per status). Labels always add an icon + word too. */
+.map-building.status-damaged, .map-thumb.status-damaged { --status-fx: brightness(0.75) sepia(0.6) saturate(2.4) hue-rotate(-25deg); }
+.map-building.status-unpowered, .map-thumb.status-unpowered { --status-fx: grayscale(1) brightness(0.5); }
+.map-building.hover { --glow-fx: brightness(1.15); }
+.map-thumb { filter: var(--status-fx, none); }
+
+/* Neon outline around a building: shown on hover/focus, and pulsing softly while crops grow. */
+.map-glow { opacity: 0; transition: opacity 0.15s ease; }
+.map-glow.status-growing { animation: glow-pulse 2.4s ease-in-out infinite; }
+.map-glow.hover { opacity: 1; animation: none; }
+@keyframes glow-pulse {
+  50% { opacity: 0.6; }
+}
+
+.map-label {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px;
+  gap: 2px;
+  padding: 4px 12px;
+  background: var(--surface);
+  border: 2px solid var(--neon-dim);
   border-radius: 10px;
+  color: var(--neon);
+  font-family: inherit;
+  font-size: clamp(0.85rem, 1.7cqw, 1.25rem);
+  line-height: 1.1;
+  white-space: nowrap;
   cursor: pointer;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid transparent;
-  color: var(--text);
 }
-.facility:hover, .crew-member:hover {
+.map-label.hover, .map-label:focus-visible {
   border-color: var(--neon);
   box-shadow: 0 0 14px var(--neon-glow);
+  outline: none;
 }
-.facility .asset { max-width: 200px; }
-.facility-name { font-weight: 400; text-align: center; color: var(--neon); }
+.map-label.status-damaged { border-color: var(--bad); animation: label-alert 1.6s ease-in-out infinite; }
+.map-label .status-chip { font-size: 0.8em; }
+@keyframes label-alert {
+  50% { box-shadow: 0 0 14px rgba(255, 90, 90, 0.6); }
+}
+
+.map-char {
+  position: absolute;
+  z-index: 2;
+  transform: translateX(-50%);
+}
+.map-char .asset { width: 100%; height: 100%; }
+.map-char[role='button'] { cursor: pointer; }
+.map-char[role='button']:hover .asset,
+.map-char[role='button']:focus-visible .asset { filter: drop-shadow(0 0 6px var(--neon)); }
+.map-char:focus-visible { outline: none; }
+.map-char-name {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--neon);
+  font-size: clamp(0.75rem, 1.4cqw, 1.05rem);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.map-char:hover .map-char-name,
+.map-char:focus-visible .map-char-name,
+.map-char-you .map-char-name { opacity: 1; }
+.map-char-you { pointer-events: none; }
 
 .status-chip {
   font-size: 0.85rem;
@@ -444,11 +527,125 @@ p { margin: 0.35em 0; }
 .chip-damaged { border-color: var(--bad); color: var(--bad); }
 .chip-unpowered { border-color: #888; color: #aaa; }
 .chip-growing { border-color: var(--good); color: var(--good); }
-.status-damaged .asset, .status-unpowered .asset { filter: grayscale(0.7) brightness(0.75); }
 
-.crew { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-.crew-member { width: 110px; }
-.crew-member .asset { max-width: 72px; }
+.building-blurb { color: var(--muted); margin: 0 0 4px; }
+.task-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 6px;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--neon);
+}
+
+.outpost-footer {
+  grid-column: 2;
+  grid-row: 2;
+  justify-content: flex-end;
+}
+
+.hud {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.hud-panel {
+  background: var(--surface);
+  border: 2px solid var(--neon);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: 0 0 18px rgba(57, 255, 20, 0.12);
+  backdrop-filter: blur(4px);
+}
+.hud-day {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--neon);
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 10px var(--neon-glow);
+}
+.hud-hazard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--warn);
+  font-size: 1rem;
+  margin-top: 6px;
+}
+.hud-hazard-mark {
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--warn);
+  color: var(--warn);
+  font-size: 0.85rem;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.hud-group { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.hud-stats { display: flex; flex-direction: column; gap: 10px; }
+.hud-life { margin-top: 2px; }
+.ap-pips { display: inline-flex; gap: 4px; }
+.ap-pip {
+  width: 12px;
+  height: 18px;
+  border-radius: 2px;
+  border: 1px solid var(--neon);
+  background: transparent;
+}
+.ap-pip.full {
+  background: var(--neon);
+  box-shadow: 0 0 8px var(--neon-glow);
+}
+
+.stat { display: flex; align-items: center; gap: 8px; width: 100%; }
+.stat-body { flex: 1; display: flex; flex-direction: column; gap: 2px; font-size: 0.95rem; }
+.stat-value { color: var(--text); font-size: 0.95rem; }
+.stat .icon { width: 28px; height: 28px; border: none; background: transparent; }
+.stat .icon.loaded { background-size: contain; }
+.bar {
+  height: 12px;
+  background: transparent;
+  border-radius: 2px;
+  overflow: hidden;
+  border: 2px solid var(--neon);
+  box-shadow: inset 0 0 8px rgba(57, 255, 20, 0.15);
+}
+.bar-fill {
+  height: 100%;
+  background: var(--neon);
+  box-shadow: 0 0 8px var(--neon-glow);
+}
+.stat-low .stat-label { color: var(--bad); }
+.stat-low .bar { border-color: var(--bad); }
+.stat-low .bar-fill { background: var(--bad); box-shadow: none; }
+
+.hud .btn {
+  width: 100%;
+  border-radius: 999px;
+  justify-content: center;
+}
+
+.banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  max-width: 420px;
+}
+.banner-warning {
+  background: rgba(0, 0, 0, 0.75);
+  border: 2px solid var(--warn);
+  color: var(--text);
+}
+.mini-portrait { width: 48px; flex: none; }
+
 
 .outpost-footer {
   display: flex;
@@ -746,51 +943,16 @@ p { margin: 0.35em 0; }
   align-items: center;
   justify-content: center;
 }
-.screen-gameover .cutscene {
-  position: relative;
-  padding: 40px 16px;
-}
+.screen-gameover .cutscene { padding: 32px 16px; }
+/* Same layout as the ending screen: picture on top, then title, text and buttons below it. */
 .screen-gameover .cutscene-image {
-  max-width: min(520px, 90vw);
-  max-height: none;
-  margin: 0 auto;
-  border: none;
-  box-shadow: 0 0 60px rgba(196, 90, 45, 0.35);
-  border-radius: 50%;
-  overflow: hidden;
-  aspect-ratio: 1;
+  border-color: var(--bad);
+  box-shadow: 0 0 50px rgba(196, 90, 45, 0.35);
 }
 .screen-gameover h2 {
-  position: absolute;
-  left: 50%;
-  top: 42%;
-  transform: translate(-50%, -50%);
-  width: 100%;
   font-size: clamp(1.4rem, 6vw, 2.4rem);
-  color: var(--neon);
-  margin: 0;
-  pointer-events: none;
-}
-.screen-gameover .cutscene-text { display: none; }
-.screen-gameover .panel-actions {
-  position: absolute;
-  left: 50%;
-  top: 58%;
-  transform: translateX(-50%);
-  flex-direction: column;
-  gap: 10px;
-  margin: 0;
-}
-.screen-gameover .panel-actions .btn {
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  color: var(--neon);
-  font-size: 1.4rem;
-}
-.screen-gameover .panel-actions .btn:hover {
-  background: transparent;
-  color: #fff;
+  color: var(--bad);
+  margin: 6px 0 0;
 }
 
 .strategy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
@@ -808,6 +970,29 @@ p { margin: 0.35em 0; }
 .strategy-check { font-weight: 400; color: var(--neon); }
 .results-outcome { font-size: 1.4rem; color: var(--neon); }
 .results-stats, .endings-list { margin: 0; }
+
+/* ---------- Sound on/off (every screen) ---------- */
+
+.sound-toggle {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 40; /* above pop-ups, so sound can always be switched off */
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--neon);
+  border: 2px solid var(--neon-dim);
+  font-family: inherit;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+.sound-toggle:hover, .sound-toggle:focus-visible {
+  border-color: var(--neon);
+  box-shadow: 0 0 12px var(--neon-glow);
+  outline: none;
+}
+.sound-toggle.is-off { color: var(--muted); }
 
 /* ---------- Debug ---------- */
 
@@ -838,9 +1023,10 @@ p { margin: 0.35em 0; }
   cursor: pointer;
 }
 
-/* ---------- Small screens ---------- */
+/* ---------- Small screens and portrait tablets ---------- */
+/* Stats move above the map so the map can use the full width (portrait iPads are 768–834px wide). */
 
-@media (max-width: 800px) {
+@media (max-width: 800px), (orientation: portrait) and (max-width: 1100px) {
   .screen-outpost {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto 1fr auto;
@@ -851,6 +1037,31 @@ p { margin: 0.35em 0; }
   .screen-outpost > .outpost-footer { grid-column: 1; grid-row: 4; }
   .hud { flex-direction: row; flex-wrap: wrap; }
   .hud-panel { flex: 1 1 160px; }
-  .scene { grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 320px; }
+  /* Two columns of bars so the stats panel stays short and the map gets the height. */
+  .hud-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 16px; }
+  .hud > .btn { flex: 1 1 100%; }
+  /* Leave the bottom-left corner free for the fixed Sound on/off button. */
+  .screen-outpost > .outpost-footer { padding-left: 160px; }
   .outpost-footer .btn { width: 100%; }
 }
+
+/* ---------- Icons added to buttons / HUD / locked tasks ---------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.icon.loaded { background-size: contain; }
+.hud-day { display: flex; align-items: center; gap: 8px; }
+.hud-icon { width: 24px; height: 24px; }
+.btn-with-icon { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-icon { width: 24px; height: 24px; }
+.locked-reason { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.locked-reason .icon { width: 20px; height: 20px; }
+
+/* Shield force field: drawn above buildings, below characters and labels. Opacity is set from Shield level. */
+.map-shield-dome { transition: opacity 0.6s ease; }

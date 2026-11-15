@@ -255,7 +255,8 @@ export const CONFIG = {
 
   facilityNames: {
     mainBase: 'Main Base',
-    shieldGenerator: 'Shield Generator',
+    // Shown to players as "Radiation Shelter" to match the building on the map (id unchanged).
+    shieldGenerator: 'Radiation Shelter',
     powerStation: 'Power Station',
     greenhouse: 'Greenhouse',
     oxygenGenerator: 'Oxygen Generator',

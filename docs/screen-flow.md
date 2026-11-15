@@ -68,15 +68,11 @@ Boxes are screens; arrows are what the player does or what triggers the transiti
                                         │   │ GAME OVER   (D3) │
                                         ▼   └────────┬─────────┘
                        ┌──────────────────────┐      ▼
-                       │ BOSS CUTSCENE        │   ┌──────────────────┐
-                       │ the alien returns!   │   │ WHAT WENT WRONG? │
-                       └──────────┬───────────┘   │ Jamie: cause +   │
-                                  ▼               │ 1–2 tips         │
-                       ┌──────────────────────┐   └────────┬─────────┘
-                       │ CHOOSE STRATEGY      │            │
-                       │ Shield│Food│Power│   │            │
-                       │ Evacuate             │            │
-                       └──────────┬───────────┘            │
+                       │ CHOOSE STRATEGY      │   ┌──────────────────┐
+                       │ Jamie: alien is back!│   │ WHAT WENT WRONG? │
+                       │ Shield│Food│Power│   │   │ Jamie: cause +   │
+                       │ Fight Back           │   │ 1–2 tips         │
+                       └──────────┬───────────┘   └────────┬─────────┘
                      chosen stat ≥ 50?                     │
                  ┌────────────────┴────────────────┐       │
                 yes                                no      │
@@ -94,7 +90,7 @@ Boxes are screens; arrows are what the player does or what triggers the transiti
                 │ ending, endings 2/4      │
                 │ [Try Again] [Title]      │
                 └──────────────────────────┘
-           Try Again → new run at Day 1 (skips the opening + tutorial)
+           Try Again → new run at Day 1 (skips the opening, replays the tutorial: D10)
 ```
 
 ## Screen list
@@ -112,15 +108,12 @@ Boxes are screens; arrows are what the player does or what triggers the transiti
 | 9 | Dialogue | Pop-up | Click NPC / cat | |
 | 10 | Hazard scene | Full screen / dialogue | Sleep on Days 3, 6, 9, 12 | Shows protection effect |
 | 11 | Sleep summary | Pop-up | End of Days 1–14 | |
-| 12 | Game over | Full screen | Health = 0 | |
+| 12 | Game over | Full screen | Health = 0 | Reuses the bad-ending picture |
 | 13 | What went wrong? | Pop-up / screen | After game over | Cause + tips |
-| 14 | Boss cutscene | Full screen | Start of Day 15 (after the Day 14 night) | No AP or tasks on Day 15 |
-| 15 | Choose strategy | Full screen | After boss cutscene | 4 choices; shows current stat vs. needed |
+| 15 | Choose strategy | Full screen | Start of Day 15 (after the Day 14 night) | Jamie says the alien is back; 4 choices; shows current stat vs. needed. No AP or tasks on Day 15. (Boss cutscene removed, D9) |
 | 16 | Win ending ×4 / Bad ending | Full screen | After choice | |
 | 17 | Results | Full screen | After every run | Try Again / Title |
 
 ## Still to decide
 
-- Does **Try Again** replay the tutorial, or skip straight to Day 1? (Prototype: skips; consider a "replay tutorial" option on the title screen.)
-- Can the player **save mid-day**, or only at the start of each day? (Prototype: auto-saves at the start of each day.)
-- Should the **strategy choice** show the player's current stat next to each option (e.g. "Food: 42 / 50 needed")? (Prototype: yes — it's educational and avoids feeling tricked.)
+Nothing open. Decided in D10: Try Again replays the tutorial (it can be skipped), saves happen at the start of each day only, and the plan choice shows each stat vs. what's needed.
