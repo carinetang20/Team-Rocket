@@ -53,3 +53,21 @@ Made for the NASA Space Apps Challenge. We used an SI coding assistant, **Claude
 | **Human-made** | Character art, opening cutscenes, hazard scenes, endings and the outpost map were drawn by our team | — |
 
 No NASA logos, branding or mission identifiers are used.
+
+## Real facts from NASA
+
+The game teaches a real space fact with every hazard warning, every hazard, and the "What happened?" screen, plus Jamie's chat lines. Each fact shows a link to the NASA page it came from. The facts and links live in `src/content/dialogue.ts` (`HAZARD_FACTS`, `LIFE_SUPPORT_FACTS`).
+
+| Topic in the game | NASA source |
+|---|---|
+| Dust storms | [The Fact and Fiction of Martian Dust Storms](https://www.nasa.gov/solar-system/the-fact-and-fiction-of-martian-dust-storms/) |
+| Solar flares / radiation | [NASA Watches Mars Light Up During Epic Solar Storm](https://www.nasa.gov/solar-system/planets/mars/nasa-watches-mars-light-up-during-epic-solar-storm/) |
+| Power (solar vs nuclear) | [10 Things: Massive Dust Storm on Mars](https://science.nasa.gov/solar-system/planets/mars/10-things-massive-dust-storm-on-mars/) |
+| Meteors | [NASA Probe Counts Space Rock Impacts on Mars](https://www.jpl.nasa.gov/news/nasa-probe-counts-space-rock-impacts-on-mars/) |
+| Oxygen | [NASA's Oxygen-Generating Experiment MOXIE Completes Mars Mission](https://www.nasa.gov/missions/mars-2020-perseverance/perseverance-rover/nasas-oxygen-generating-experiment-moxie-completes-mars-mission/) |
+| Water | [NASA Achieves Water Recovery Milestone on International Space Station](https://www.nasa.gov/missions/station/iss-research/nasa-achieves-water-recovery-milestone-on-international-space-station/) |
+| Growing food | [Growing Plants in Space](https://www.nasa.gov/exploration-research-and-technology/growing-plants-in-space/) |
+| Food for a Mars trip | [Thermostabilized Shelf Life Study (NASA Technical Reports Server)](https://ntrs.nasa.gov/citations/20090006887) |
+| Mars basics (sol, red colour, air, temperature) | [Mars Facts](https://science.nasa.gov/mars/facts/) |
+
+Game numbers (damage, costs, days) are still made up for balance; only the facts shown to players are real.

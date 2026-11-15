@@ -85,14 +85,15 @@ export const BOSS_TEXT = 'Day 15. The alien is back! Which plan will stop it?';
 export const NPC_LINES: Record<'jasslyn' | 'jamie' | 'cat', string[]> = {
   jasslyn: [
     'The alien comes on Day 15. Be ready!',
-    'Pick one plan: Shield, Food, Power, or Health.',
+    'Pick one plan: Shield, Food, Power, or Fight Back.',
     'Watch for warnings. Bad things come every few days.',
   ],
   jamie: [
-    'A day on Mars is called a sol!',
-    'Mars is red because of rusty dust.',
-    "Mars air isn't safe to breathe — we need the Oxygen machine!",
-    'Mars is really cold — about −60 °C.',
+    // Facts from NASA's Mars facts page (science.nasa.gov/mars/facts).
+    'A day on Mars is called a sol. It lasts about 24.6 hours!',
+    'Mars looks red because the iron in its rocks has rusted.',
+    'Mars air is thin and mostly carbon dioxide — we need the Oxygen machine!',
+    'Mars can get as cold as about −153 °C!',
   ],
   cat: [
     'Mrrp?',
@@ -115,6 +116,113 @@ export const HAZARD_HINTS: Record<string, string> = {
 };
 
 export const GENERIC_HAZARD_HINT = 'Use your AP to get ready!';
+
+// ---------- Real facts from NASA ----------
+// Each hazard and life-support need is paired with a real fact, checked against the NASA page
+// linked in `url`. Shown on warning, hazard and "What happened?" screens. Keep numbers exactly
+// as the source states them; if you change a fact, re-check it on the source page.
+
+export interface NasaFact {
+  /** Short label shown above the fact. */
+  label: 'Real Mars fact' | 'Real space fact';
+  text: string;
+  /** Page title, shown as the source link. */
+  source: string;
+  url: string;
+}
+
+const SOURCES = {
+  dustStorms: {
+    source: 'NASA: The Fact and Fiction of Martian Dust Storms',
+    url: 'https://www.nasa.gov/solar-system/the-fact-and-fiction-of-martian-dust-storms/',
+  },
+  solarStorm: {
+    source: 'NASA: NASA Watches Mars Light Up During Epic Solar Storm',
+    url: 'https://www.nasa.gov/solar-system/planets/mars/nasa-watches-mars-light-up-during-epic-solar-storm/',
+  },
+  opportunity: {
+    source: 'NASA Science: 10 Things: Massive Dust Storm on Mars',
+    url: 'https://science.nasa.gov/solar-system/planets/mars/10-things-massive-dust-storm-on-mars/',
+  },
+  impacts: {
+    source: 'NASA JPL: NASA Probe Counts Space Rock Impacts on Mars',
+    url: 'https://www.jpl.nasa.gov/news/nasa-probe-counts-space-rock-impacts-on-mars/',
+  },
+  moxie: {
+    source: "NASA: NASA's Oxygen-Generating Experiment MOXIE Completes Mars Mission",
+    url: 'https://www.nasa.gov/missions/mars-2020-perseverance/perseverance-rover/nasas-oxygen-generating-experiment-moxie-completes-mars-mission/',
+  },
+  water: {
+    source: 'NASA: NASA Achieves Water Recovery Milestone on International Space Station',
+    url: 'https://www.nasa.gov/missions/station/iss-research/nasa-achieves-water-recovery-milestone-on-international-space-station/',
+  },
+  plants: {
+    source: 'NASA: Growing Plants in Space',
+    url: 'https://www.nasa.gov/exploration-research-and-technology/growing-plants-in-space/',
+  },
+  foodShelfLife: {
+    source: 'NASA Technical Reports Server: Thermostabilized Shelf Life Study',
+    url: 'https://ntrs.nasa.gov/citations/20090006887',
+  },
+  marsFacts: { source: 'NASA Science: Mars Facts', url: 'https://science.nasa.gov/mars/facts/' },
+} as const;
+
+const OXYGEN_FACT: NasaFact = {
+  label: 'Real Mars fact',
+  text: "NASA's MOXIE machine on the Perseverance rover made oxygen from the carbon dioxide in Mars's thin air: 122 grams, about what a small dog breathes in 10 hours.",
+  ...SOURCES.moxie,
+};
+const WATER_FACT: NasaFact = {
+  label: 'Real space fact',
+  text: "The International Space Station recycles about 98% of its water, even water from the crew's breath, sweat and urine.",
+  ...SOURCES.water,
+};
+const PLANTS_FACT: NasaFact = {
+  label: 'Real space fact',
+  text: 'Astronauts have grown lettuce, Chinese cabbage and kale in a space garden called Veggie, and eaten some of them!',
+  ...SOURCES.plants,
+};
+
+export const HAZARD_FACTS: Record<string, NasaFact> = {
+  dustStorm: {
+    label: 'Real Mars fact',
+    text: 'Big dust storms on Mars can cover the whole planet. The strongest winds reach about 60 miles per hour (about 100 km/h).',
+    ...SOURCES.dustStorms,
+  },
+  solarFlare: {
+    label: 'Real Mars fact',
+    text: 'Mars has no magnetic field to block space radiation. One solar storm gave a dose like 30 chest X-rays. Cliffs or lava tubes would help shield astronauts.',
+    ...SOURCES.solarStorm,
+  },
+  generatorMalfunction: {
+    label: 'Real Mars fact',
+    text: 'In 2018 a dust storm blocked the sunlight the Opportunity rover used for power, so it could not recharge. Curiosity has a nuclear battery that runs day and night.',
+    ...SOURCES.opportunity,
+  },
+  meteorShower: {
+    label: 'Real Mars fact',
+    text: 'Mars has a much thinner atmosphere than Earth. More than 200 small space rocks hit Mars every year, making new craters.',
+    ...SOURCES.impacts,
+  },
+  oxygenLeak: OXYGEN_FACT,
+  waterContamination: WATER_FACT,
+  cropInfestation: PLANTS_FACT,
+  alienInvasion: {
+    label: 'Real space fact',
+    text: 'The alien is pretend, but packing food is a real problem! NASA expects food for a Mars mission to need to last 5 years.',
+    ...SOURCES.foodShelfLife,
+  },
+};
+
+/** Facts for the "What happened?" screen, by the supply that ran low. */
+export const LIFE_SUPPORT_FACTS: Record<LifeSupportId, NasaFact> = {
+  oxygen: OXYGEN_FACT,
+  water: WATER_FACT,
+  food: PLANTS_FACT,
+};
+
+/** Every NASA page the game's facts come from (for credits). */
+export const NASA_FACT_SOURCES: { source: string; url: string }[] = Object.values(SOURCES);
 export const BOSS_WARNING_TEXT = 'Alien tomorrow! Last day to prepare. Pick a plan: Shield, Food, Power, or Fight Back.';
 
 const PROTECTION_TIPS: Partial<Record<ResourceId, string>> = {

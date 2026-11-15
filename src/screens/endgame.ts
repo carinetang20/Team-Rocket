@@ -3,10 +3,10 @@
 import { STRATEGY_STAT } from '../contract/engine';
 import { RESOURCE_IDS, STRATEGIES } from '../contract/types';
 import { endingAssetId } from '../content/assetManifest';
-import { BOSS_TEXT, ENDING_TEXT, STRATEGY_INFO, deathExplanation } from '../content/dialogue';
+import { BOSS_TEXT, ENDING_TEXT, LIFE_SUPPORT_FACTS, STRATEGY_INFO, deathExplanation } from '../content/dialogue';
 import type { FlowContext } from '../flow/flow';
 import { assetBox } from './assets';
-import { dialogueBox, panel, resourceChip, screen } from './common';
+import { dialogueBox, factBox, panel, resourceChip, screen } from './common';
 import { button, h } from './dom';
 
 export function gameOverScreen(ctx: FlowContext): HTMLElement {
@@ -41,6 +41,8 @@ export function whatWentWrongScreen(ctx: FlowContext): HTMLElement {
         h('ul', {}, ...why.map((w) => h('li', { text: w }))),
         h('h3', { text: 'Tips' }),
         ...tips.map((t) => dialogueBox('jamie', t, [])),
+        // A real fact about the supply that ran out first, so a loss still teaches something.
+        cause?.lowResources[0] && factBox(LIFE_SUPPORT_FACTS[cause.lowResources[0].resource]),
       ],
       [button('Results', ctx.actions.next)],
     ),

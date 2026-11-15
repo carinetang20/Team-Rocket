@@ -2,7 +2,7 @@
 // Person C will replace these with real UI components in src/ui/.
 
 import type { ResourceChange, ResourceId } from '../contract/types';
-import { RESOURCE_LABELS, SPEAKER_NAMES, type Speaker } from '../content/dialogue';
+import { RESOURCE_LABELS, SPEAKER_NAMES, type NasaFact, type Speaker } from '../content/dialogue';
 import { assetBox } from './assets';
 import { h, type Child } from './dom';
 
@@ -129,5 +129,21 @@ export function toast(
     { class: 'toast', attrs: { role: 'status' } },
     data.text ? h('span', { class: 'toast-text', text: data.text }) : null,
     chips.length > 0 ? h('span', { class: 'toast-chips chip-row' }, ...chips) : null,
+  );
+}
+
+/** A real fact from NASA with a link to its source page (opens in a new tab). */
+export function factBox(fact: NasaFact | undefined): HTMLElement | null {
+  if (!fact) return null;
+  return h(
+    'aside',
+    { class: 'nasa-fact' },
+    h('strong', { class: 'nasa-fact-label', text: `🔭 ${fact.label}` }),
+    h('p', { text: fact.text }),
+    h('a', {
+      class: 'nasa-fact-source',
+      text: `Source: ${fact.source}`,
+      attrs: { href: fact.url, target: '_blank', rel: 'noopener noreferrer' },
+    }),
   );
 }

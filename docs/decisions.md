@@ -66,6 +66,10 @@ Guiding principle: the game should be **educationally challenging, not needlessl
 - The **plan choice** shows each stat next to what's needed (e.g. "15 / 50").
 - The cat has no "Feed" button; talking to the cat is just for fun.
 
+### D11 — Real facts from NASA *(2026-11-15)*
+- Every hazard warning, hazard scene and "What happened?" screen shows a short real fact with a link to its NASA source page. Jamie's chat lines use facts from NASA's Mars facts page.
+- Facts live in `src/content/dialogue.ts` (`HAZARD_FACTS`, `LIFE_SUPPORT_FACTS`); sources are listed in the README. Game balance numbers stay invented.
+
 ---
 
 ## Design issues — resolved by Person A *(2026-11-09)*

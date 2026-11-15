@@ -6,6 +6,7 @@ import {
   BOSS_WARNING_TEXT,
   FACILITY_NAMES,
   GENERIC_HAZARD_HINT,
+  HAZARD_FACTS,
   HAZARD_HINTS,
   STATUS_LABELS,
   explainHazard,
@@ -14,7 +15,7 @@ import {
 import { filterEvents, findEvent } from '../flow/events';
 import type { FlowContext } from '../flow/flow';
 import { assetBox } from './assets';
-import { changeList, dialogueBox, panel, resourceChip, screen } from './common';
+import { changeList, dialogueBox, factBox, panel, resourceChip, screen } from './common';
 import { button, h } from './dom';
 
 export function dailyReportScreen(ctx: FlowContext): HTMLElement {
@@ -96,6 +97,7 @@ export function warningScreen(ctx: FlowContext): HTMLElement {
         w.hazardId && assetBox(hazardAssetId(w.hazardId), { class: 'warning-image' }),
         h('p', { text: `Coming ${when}. Get ready!` }),
         dialogueBox('jamie', hint, []),
+        w.hazardId && factBox(HAZARD_FACTS[w.hazardId]),
       ],
       [button('Got it', ctx.actions.next)],
     ),
@@ -115,6 +117,7 @@ export function hazardSceneScreen(ctx: FlowContext): HTMLElement {
       h('h2', { text: `${hz.name}!` }),
       h('p', { class: 'cutscene-text', text: hz.description }),
       dialogueBox('jamie', lines.join(' '), []),
+      factBox(HAZARD_FACTS[hz.hazardId]),
       h('div', { class: 'panel-actions' }, button('Continue', ctx.actions.next)),
     ),
   );
